@@ -27,7 +27,7 @@
     <div class="store-list-section pt-110 mb-110">
         <div class="container">
             <div class="row g-4 mb-60">
-                {% for seller in sellers %}
+                {% for seller in page_obj %}
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <div class="store-card">
                         <div class="store-card-content">
@@ -81,31 +81,33 @@
                     <p class="text-center">No sellers available at the moment.</p>
                 {% endfor %}
             </div>
+            {% if page_obj.paginator.num_pages > 1 %}
             <div class="row">
                 <div class="col-lg-12 d-flex justify-content-center wow animate fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
                     <div class="inner-pagination-area">
                         <ul class="paginations">
-                            <li class="page-item active">
-                                <a href="#">01</a>
-                            </li>
-                            <li class="page-item">
-                                <a href="#">02</a>
-                            </li>
-                            <li class="page-item">
-                                <a href="#">03</a>
-                            </li>
+                            {% if page_obj.has_previous %}
                             <li class="page-item paginations-button">
-                                <a href="#">
-                                    <svg width="16" height="13" viewBox="0 0 16 13" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M15.557 10.1026L1.34284 1.89603M15.557 10.1026C12.9386 8.59083 10.8853 3.68154 12.7282 0.489511M15.557 10.1026C12.9386 8.59083 7.66029 9.2674 5.81744 12.4593" stroke-width="0.96" stroke-linecap="round" />
-                                    </svg>
-                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}">«</a>
                             </li>
+                            {% endif %}
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if num == page_obj.number %}
+                                    <li class="page-item active"><a href="#">{{ num|add:"0"|stringformat:"02d" }}</a></li>
+                                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                                    <li class="page-item"><a href="?page={{ num }}">{{ num|add:"0"|stringformat:"02d" }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                            <li class="page-item paginations-button">
+                                <a href="?page={{ page_obj.next_page_number }}">»</a>
+                            </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
     <!-- End Store List section -->

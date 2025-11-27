@@ -79,5 +79,6 @@ urlpatterns = [
 
     # admin CSV download
     path('admin-manage-product/export-csv/', views.export_products_csv_view, name='export_products_csv'),
+    path('auction/<int:product_id>/pay/success/', views.razorpay_payment_success, name='razorpay-payment-success'),
 ]
 

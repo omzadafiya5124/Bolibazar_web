@@ -163,4 +163,5 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-
+RAZORPAY_KEY_ID='rzp_test_RksTz1xSamkg4r'
+RAZORPAY_KEY_SECRET='049Ey19sBZd9AIIdnWqWJMIx'

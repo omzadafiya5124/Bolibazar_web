@@ -115,7 +115,7 @@
                                                     {%if product.is_sold %}
                                                     <a href="{% url 'auction-details' product.id %}" class="bid-btn">Sold Out</a>
                                                     {%else%}
-                                                        <a   class="bid-btn">Not Sold</a>
+                                                        <a class="bid-btn" style="background:#dc3545;">Not Sold</a>
                                                     {%endif%}
                                                 {%else%}
                                                     <a href="{% url 'auction-details' product.id %}" class="bid-btn">Coming Soon</a>

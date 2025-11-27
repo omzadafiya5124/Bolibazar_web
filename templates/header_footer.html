@@ -214,7 +214,6 @@
                                 <li><a href="{% url "how-to-sell" %}">How To Sell</a></li>
                                 <li><a href="{% url "how-to-bid" %}">How to Bid</a></li>
                                 <li><a href="{% url "faqs" %}">Faqs</a></li>
-                                <li><a href="{% url "error" %}">Error</a></li>
                             </ul>
                         </li>
                         <li><a href="{% url "contact" %}" class="drop-down">Contact</a></li>
@@ -415,7 +414,7 @@
                         </div>
                         <div class="col-lg-3 col-sm-6 d-flex align-items-center justify-content-md-end justify-content-start">
                             <div class="newletter-and-payment-wrap">
-                                <div class="newletter-area" style="text-align:center; padding:30px;">
+                                <div class="newletter-area" style="text-align:center;">
                                     <h4 style="font-size:26px; font-weight:700; margin-bottom:15px;">
                                         Join Our Newsletter Get updates, offers, and news.
                                     </h4>
@@ -461,7 +460,7 @@
     <!-- End Footer section -->
     <!--  Main jQuery  -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     // Select all search inputs using the common class
     const searchInputs = document.querySelectorAll('.search-input-js');
     const resultsContainer = document.getElementById('searchResultsContainer');
@@ -579,9 +578,7 @@
 });
 
 
-
-
-        document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
         // Find the mobile user menu container
         const mobileMenu = document.querySelector('.mobile-user-menu');
         
@@ -700,8 +697,6 @@
             });
         });
 
-
-        
     </script>
     <script data-cfasync="false" src="../../../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{% static "assets/js/jquery-3.7.1.min.js"%}"></script>
     <!-- Popper and Bootstrap JS -->
@@ -720,9 +715,9 @@
     <script src="{% static "assets/js/jquery.fancybox.min.js"%}"></script>
     <!-- Wow  JS -->
     <script src="{% static "assets/js/wow.min.js"%}"></script>
-    
 
-    
+
+
     
     <!-- Marquee  JS -->
     <script src="{% static "assets/js/jquery.marquee.min.js"%}"></script>

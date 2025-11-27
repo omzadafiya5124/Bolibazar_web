@@ -77,6 +77,7 @@ class Product(models.Model):
 
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE,related_name='seller_products',null=True, blank=True)
+    is_paid = models.BooleanField(default=False)
     
     def __str__(self):
         return self.product_name

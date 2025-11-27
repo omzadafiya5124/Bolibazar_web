@@ -40,27 +40,32 @@
 
                 <!-- Dashboard Stats -->
                 {%if user.account_type == "Bidder"%}
-                <div class="row g-lg-3 gy-4">
-                    <div class="col-lg-4">
+                <div class="row g-lg-2 gy-4">
+                    <div class="col-lg-3">
                         <div class="single-counter-card">
                             <span>Auction Attend</span>
                             <h2>{{ attended_auctions_count }}</h2>
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    <div class="col-lg-3">
                         <div class="single-counter-card two">
                             <span>Auction Win</span>
                             <h2>{{ won_auctions_count }}</h2>
                         </div>
                     </div>
-                    <div class="col-lg-4">
-                        <div class="single-counter-card three">
+                    <div class="col-lg-3">
+                        <div class="single-counter-card" style="background-color: #dc3545;">
+                            <span style="color: #fff;">Payment Pending</span>
+                            <h2 style="color: #fff;">{{ pending_payments_count }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="single-counter-card">
                             <span>Auction Losing</span>
                             <h2>{{ losing_auctions_count }}</h2>
                         </div>
                     </div>
                 </div>
-
                 <!-- Bidding Summary -->
                 <div class="bidding-summary-wrap mt-5">
                     <h6>Bidding Summary</h6>

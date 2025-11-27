@@ -27,8 +27,8 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 from django.db.models import Q
-
-
+import razorpay
+from django.views.decorators.csrf import csrf_exempt
 #For edit profile
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http import JsonResponse
@@ -83,28 +83,86 @@ def blog(request,pk):
     return render(request, "blog.html",{'blog':blog})
 
 def category(request): 
-    categories = Category.objects.annotate(product_count=Count('product')).order_by('id')
-    return render(request, "category.html",{'categories':categories})
+    categories_qs = Category.objects.annotate(product_count=Count('product')).order_by('id')
+
+    paginator = Paginator(categories_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "category.html", {'page_obj': page_obj})
 
 def contact(request): 
     return render(request, "contact.html")
 
 def seller_list(request): 
-    sellers = User.objects.filter(account_type='Seller', is_active=True) 
+    sellers_qs = User.objects.filter(account_type='Seller', is_active=True).order_by('-id')
+
+    paginator = Paginator(sellers_qs, 8)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'sellers': sellers
+        'page_obj': page_obj
     }
     return render(request, "seller_list.html", context)
 
 def seller_details(request, pk):
     seller  = get_object_or_404(User, pk=pk, account_type='Seller')
-    products = seller.seller_products.all()
-    s_cnt = products.count()
+    base_products_qs = seller.seller_products.all().order_by('-auction_start_date_time')
+    category_id = request.GET.get('category', '').strip()
+    total_products = base_products_qs.count()
+
+    # Filters
+    search_q = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').lower()
+
+    products_qs = base_products_qs
+    now = timezone.now()
+
+    if status == 'live':
+        products_qs = products_qs.filter(
+            auction_start_date_time__lte=now,
+            auction_end_date_time__gte=now
+        ) 
+    elif status == 'upcoming':
+        products_qs = products_qs.filter(
+            auction_start_date_time__gt=now
+        )
+    elif status == 'closed':
+        products_qs = products_qs.filter(
+            auction_end_date_time__lt=now
+        )
+
+    if search_q:
+        products_qs = products_qs.filter(
+            Q(product_name__icontains=search_q) |
+            Q(sub_description__icontains=search_q) |
+            Q(product_description__icontains=search_q)
+        )
+
+    if category_id:
+        products_qs = products_qs.filter(category_id=category_id)
+
+    # Attach dynamic info
+    for product in products_qs:
+        bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
+        product.highest_bid = bids.first()
+        product.winner = product.highest_bid.user if product.highest_bid else None
+        product.is_sold = product.highest_bid is not None
+
+    paginator = Paginator(products_qs, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    categories = Category.objects.all().order_by('name')
     
     context = {
         'seller': seller,
-        's_cnt':s_cnt,
-        'products': products, 
+        's_cnt': total_products,
+        'categories': categories,
+        'page_obj': page_obj,
+        'search_q': search_q,
+        'selected_status': status,
     }
     return render(request, "seller_details.html", context)
 
@@ -426,15 +484,59 @@ def admin_required(view_func):
     return wrapper
 
 def auction(request):
-    products = Product.objects.all().order_by('-auction_start_date_time')
-    for product in products:
+    products_qs = Product.objects.all().order_by('-auction_start_date_time')
+
+    # Filters
+    status = request.GET.get('status', '').lower()
+    category_id = request.GET.get('category', '').strip()
+    search_q = request.GET.get('q', '').strip()
+
+    now = timezone.now()
+
+    if status == 'live':
+        products_qs = products_qs.filter(
+            auction_start_date_time__lte=now,
+            auction_end_date_time__gte=now
+        )
+    elif status == 'upcoming':
+        products_qs = products_qs.filter(
+            auction_start_date_time__gt=now
+        )
+    elif status == 'closed':
+        products_qs = products_qs.filter(
+            auction_end_date_time__lt=now
+        )
+
+    if category_id:
+        products_qs = products_qs.filter(category_id=category_id)
+
+    if search_q:
+        products_qs = products_qs.filter(
+            Q(product_name__icontains=search_q) |
+            Q(sub_description__icontains=search_q) |
+            Q(product_description__icontains=search_q)
+        )
+
+    # Attach dynamic fields
+    for product in products_qs:
         bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
         product.highest_bid = bids.first()
         product.winner = product.highest_bid.user if product.highest_bid else None
         product.is_sold = product.highest_bid is not None
 
+    # Pagination
+    paginator = Paginator(products_qs, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    categories = Category.objects.all().order_by('name')
+
     context = {
-        'products': products,
+        'page_obj': page_obj,
+        'categories': categories,
+        'selected_status': status,
+        'selected_category_id': category_id,
+        'search_q': search_q,
     }
     return render(request, "auction.html", context)
 
@@ -448,6 +550,52 @@ def auc_details(request, pk):
 
     highest_bid = bids.first()
     winner = highest_bid.user if highest_bid else None
+    
+    # Razorpay integration - only for winners after auction ends
+    razorpay_key_id = None
+    razorpay_order_id = None
+    winning_price_in_paise = None
+    is_winner = False
+    auction_ended = False
+    
+    now = timezone.now()
+    if product.auction_end_date_time and product.auction_end_date_time < now:
+        auction_ended = True
+        if winner and winner == request.user and highest_bid:
+            is_winner = True
+            # Check if payment is already done
+            if not product.is_paid:
+                try:
+                    # Convert winning bid amount to paise (multiply by 100)
+                    # Convert Decimal to float first, then to int
+                    winning_price_in_paise = int(float(highest_bid.bid_amount) * 100)
+                    
+                    # Create Razorpay order
+                    razorpay_key_id = settings.RAZORPAY_KEY_ID
+                    order_data = {
+                        'amount': winning_price_in_paise,  # Amount in paise
+                        'currency': 'INR',
+                        'receipt': f'order_{product.id}_{highest_bid.id}',
+                        'notes': {
+                            'product_id': product.id,
+                            'product_name': product.product_name,
+                            'bid_id': highest_bid.id,
+                            'user_id': request.user.id
+                        }
+                    }
+                    
+                    razorpay_order = client.order.create(order_data)
+                    razorpay_order_id = razorpay_order['id']
+                    
+                except Exception as e:
+                    print(f"Error creating Razorpay order: {e}", file=sys.stderr)
+                    messages.error(request, 'Error initializing payment. Please try again later.')
+    
+    if request.GET.get('payment_status') == 'success':
+        messages.success(request, 'Payment completed successfully! Your payment has been verified.')
+    elif request.GET.get('payment_status') == 'error':
+        messages.error(request, 'Payment verification failed. Please contact support if you have been charged.')
+    
     if request.method == 'POST':
         form_data = ReviewForm(request.POST)
         if form_data.is_valid():
@@ -471,6 +619,11 @@ def auc_details(request, pk):
         'bids':bids,
         'highest_bid': highest_bid,
         'winner': winner,
+        'razorpay_key_id': razorpay_key_id,
+        'razorpay_order_id': razorpay_order_id,
+        'winning_price_in_paise': winning_price_in_paise,
+        'is_winner': is_winner,
+        'auction_ended': auction_ended,
     }
     
     return render(request, 'auction-details.html', context)
@@ -577,13 +730,17 @@ def dash_board(request):
             unique_latest_bids[bid.product_id] = bid
 
     latest_user_bids = list(unique_latest_bids.values())
+    pending_payments_count = 0
 
     # Mark winning bids
     winning_bids = []
     for bid in latest_user_bids:
+        product = bid.product
         highest_bid = Bidding.objects.filter(product=bid.product).aggregate(Max('bid_amount'))['bid_amount__max']
         if bid.bid_amount == highest_bid:
             winning_bids.append(bid)
+            if not product.is_paid:
+                pending_payments_count += 1
 
     # Stats
     total_bids = Bidding.objects.filter(user=user).count()
@@ -603,6 +760,7 @@ def dash_board(request):
         'attended_auctions_count': attended_auctions_count,
         'won_auctions_count': won_auctions_count,
         'losing_auctions_count': losing_auctions_count,
+        'pending_payments_count': pending_payments_count,
 
         # Seller-specific
         'products': seller_products,
@@ -671,6 +829,7 @@ def user_auction(request):
 
     winning_bids = []
     losing_bids = []
+    pending_payment_products=[]
 
     for entry in latest_user_bids:
         product_id = entry['product']
@@ -682,12 +841,16 @@ def user_auction(request):
         highest_bid = product.bids.order_by('-bid_amount').first()
         if highest_bid and highest_bid.user == user:
             winning_bids.append(user_bid)
+            if not product.is_paid:
+                # ADD THE PRODUCT OBJECT TO THE LIST
+                pending_payment_products.append(product) 
         else:
             losing_bids.append(user_bid)
 
     return render(request, "dashboard-my-auction.html", {
         'winning_bids': winning_bids,
-        'losing_bids': losing_bids
+        'losing_bids': losing_bids,
+        'pending_payment_products':pending_payment_products
     })
 
 def edit_profile_view(request):
@@ -706,6 +869,7 @@ def edit_profile(request):
             return redirect('edit_profile') 
     else:
         form = UserProfileEditForm(instance=user)
+        
 
     return render(request, 'dashboard-edit-profile.html', {'form': form, 'user': user})
     
@@ -730,15 +894,17 @@ def change_password(request):
     return render(request, 'dashboard-change-password.html', {'form': form})
 
 
+@admin_required
 def add_blog(request):
     if request.method == 'POST':
         form = BlogForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect('home')
+            blog = form.save()
+            messages.success(request, f'Blog "{blog.title}" has been successfully published!')
+            return redirect('admin-manage-blog')
     else:
         form = BlogForm()
-    return render(request, 'Admin/add_blog.html', {'form': form})
+    return render(request, 'Admin/blog/add_blog.html', {'form': form})
 
 def place_bid(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -843,21 +1009,30 @@ def adminManageProduct(request):
     }
     return render(request, 'Admin/product/manage_product.html', context)
 
-def admin_product_form(request):
+# Assuming you have imported necessary modules:
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.core.files.storage import default_storage
+# from .forms import ProductForm # Ensure this is imported
+
+def admin_product_form(request, pk=None): # Use pk=None for new/edit in one view (optional)
+    # ... (If using combined new/edit view, handle pk logic here) ...
+
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
+        form = ProductForm(request.POST, request.FILES, instance=None) # instance=None for new
         if form.is_valid():
-            product = form.save()
-            # Handle gallery images upload (append)
+            product = form.save() 
             gallery_files = request.FILES.getlist('gallery_images_upload')
             if gallery_files:
-                saved_paths = product.gallery_images or []
+                saved_paths = [] 
                 for f in gallery_files:
                     path = default_storage.save(f"products/gallery/{f.name}", f)
                     saved_paths.append(path)
                 product.gallery_images = saved_paths
+                
                 product.save(update_fields=['gallery_images'])
             return JsonResponse({'ok': True})
+        
         return render(request, 'Admin/product/_product_form.html', {'form': form})
     form = ProductForm()
     return render(request, 'Admin/product/_product_form.html', {'form': form})
@@ -1129,3 +1304,73 @@ def export_products_csv_view(request):
 
     return response
 
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+@csrf_exempt
+def razorpay_payment_success(request, product_id):
+    if request.method == 'POST':
+        try:
+            product = get_object_or_404(Product, id=product_id)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Product not found: {str(e)}'}, status=404)
+        
+        try:
+            # Parse JSON data from request body
+            if not request.body:
+                return JsonResponse({'status': 'error', 'message': 'Empty request body'}, status=400)
+            
+            data = json.loads(request.body)
+            # The payload sent from the JavaScript handler function
+            razorpay_payment_id = data.get('razorpay_payment_id')
+            razorpay_order_id = data.get('razorpay_order_id')
+            razorpay_signature = data.get('razorpay_signature')
+            
+            if not all([razorpay_payment_id, razorpay_order_id, razorpay_signature]):
+                return JsonResponse({'status': 'error', 'message': 'Missing required payment data'}, status=400)
+                
+        except json.JSONDecodeError as e:
+            return JsonResponse({'status': 'error', 'message': f'Invalid JSON data: {str(e)}'}, status=400)
+        except KeyError as e:
+            return JsonResponse({'status': 'error', 'message': f'Missing required field: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Error processing request: {str(e)}'}, status=400)
+
+        # 1. Verify the payment signature from Razorpay
+        params_dict = {
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        }
+
+        try:
+            # Verify payment signature
+            client.utility.verify_payment_signature(params_dict)
+
+            # 2. Signature is valid: Update the product/auction status
+            product.is_paid = True
+            product.save()
+
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Payment successfully verified.',
+                'redirect_url': reverse('auction-details', args=[product.id])
+            })
+
+        except Exception as e:
+            # Check if it's a signature verification error
+            error_message = str(e)
+            if 'signature' in error_message.lower() or 'verification' in error_message.lower():
+                print(f"Razorpay Signature Verification Failed: {e}", file=sys.stderr)
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Payment signature verification failed. Please contact support.'
+                }, status=400)
+            else:
+                # Other errors
+                print(f"Razorpay Payment Processing Error: {e}", file=sys.stderr)
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Error processing payment: {str(e)}'
+                }, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed. Only POST requests are accepted.'}, status=405)

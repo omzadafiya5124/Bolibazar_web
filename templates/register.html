@@ -304,6 +304,25 @@
 
     {% block js %}
     <script>
+
+
+     function getTodayDate() {
+        const today = new Date();
+        // Adjust for timezone offset to get the correct 'day' in UTC
+        const offset = today.getTimezoneOffset() * 60000;
+        const localTime = new Date(today.getTime() - offset);
+        return localTime.toISOString().split('T')[0];
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('id_date_of_birth');
+        
+        if (dateInput) {
+            // Set the 'max' attribute to today's date
+            dateInput.setAttribute('max', getTodayDate());
+        }
+    });
+    
     document.addEventListener("DOMContentLoaded", () => {
         // --- ELEMENT SELECTORS ---
         const form = document.getElementById("register-form");

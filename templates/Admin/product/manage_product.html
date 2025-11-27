@@ -329,11 +329,12 @@
         }
         .product-table-card tbody tr:nth-child(even){ background: #fbfbfd; }
 
-        /* #for active butoon */
+        /* Status Badge Design - Same as Manage User */
         .badge { display:inline-block; padding:.20rem .5rem; border-radius:999px; font-size:11px; font-weight:600; }
         .badge-role { background:#e8f0ff; color:#2e59d9; }
         .badge-live { background:#e6f8f1; color:#0f9d58; }
         .badge-upcoming { background:#fdecea; color:#c0392b; }
+        .badge-closed,
         .badge-close { background:#fdecea; color:#c0392b; }
     </style>
 </head>
@@ -342,9 +343,14 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        
-        <h1>Manage Products</h1>
-        <button class="edit-btn btn btn-primary" onclick="window.location.href='{% url 'export_products_csv' %}' " >Export All Products to CSV</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Manage Products</h1>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{% url 'export_products_csv' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    <i class="fas fa-download"></i> Export CSV
+                </a>
+            </div>
+        </div>
         <!-- Product Table Card -->
         <div class="product-table-card">
             <div class="product-table-header" style="display:flex; align-items:center; justify-content: space-between;">
@@ -372,6 +378,7 @@
                             <th>Auction Start</th>
                             <th>Auction End</th>
                             <th>Status</th>
+                            <th>Payment Status</th> 
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -427,11 +434,18 @@
                                     <span>{{ product.auction_status }}</span>
                                 {% endif %}
                             </td>
-
+                            <td>
+                                {%if product.is_paid %}
+                                    <span class="badge badge-live">Success</span>
+                                {% elif product.auction_status == 'live' %}
+                                    <span class="badge badge-upcoming">Pending</span>
+                                {%else%}    
+                                    <span class="badge badge-closed">Failed</span>
+                                {%endif%}
+                            </td>
                             <!-- 6. Action Buttons with Dynamic URLs -->
                             <td class="action-btns">
-                                <!-- Replace 'edit-product-url' and 'delete-product-url' with your actual URL names -->
-                                <a href="#" class="edit-btn js-edit-product" data-product-id="{{ product.id }}"><i class="fas fa-edit"></i> <!-- for edit icon --></a>
+                                <a href="#" class="edit-btn js-edit-product" data-product-id="{{ product.id }}"><i class="fas fa-edit"></i></a>
                                 <form action="{% url 'delete-product' product.id %}" method="POST" style="display: inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="delete-btn" 

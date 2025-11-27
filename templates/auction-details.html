@@ -156,22 +156,47 @@
                                     {% endif %}
                                 {% endif %}
                             </div>  
-                            {% if product.auction_status == "closed" %}
-                                {% if highest_bid %}
-                                    <div class="alert alert-success mt-4">
-                                    🏆 <strong>Winner:</strong> {{ winner.username }} <br>
-                                    💰 <strong>Winning Bid:</strong> ₹{{ highest_bid.bid_amount }} <br>
-                                    🕒 <strong>Placed on:</strong> {{ highest_bid.bid_time|date:"M d, Y H:i" }}
-                                    </div>
-                                    {% if winner.username == user.username%}
-                                        <p>absjchsab jbxiqwbi</p>
-                                    {%endif%}
-                                {% else %}
-                                    <div class="alert alert-warning mt-4">
-                                    No bids placed yet.
-                                    </div>
-                                {% endif %}
-                            {%endif%}
+                       {% if product.auction_status == "closed" %}
+    {% if highest_bid %}
+        <div class="alert alert-info mt-4">
+            🏆 <strong>Winner:</strong> {{ winner.username }} <br>
+            💰 <strong>Winning Bid:</strong> ₹{{ highest_bid.bid_amount }} <br>
+            🕒 <strong>Placed on:</strong> {{ highest_bid.bid_time|date:"M d, Y H:i" }}
+        </div>
+        
+        {% if winner.username == user.username and not product.is_paid and auction_ended %}
+            <div class="mt-4 p-3 border rounded bg-light">
+                <h5>Congratulations! You won the auction.</h5>
+                <p>Please complete the payment of <strong>₹{{ highest_bid.bid_amount }}</strong> to claim your item.</p>
+
+                <form method="POST"> 
+                    {% csrf_token %}
+                    <button id="rzp-button1" class="btn btn-primary primary-btn btn-hover">
+                        Pay Now via Razorpay
+                        <span></span>
+                    </button>
+                </form>
+            </div>
+            
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+        {% elif winner.username == user.username and product.is_paid %}
+            <div class="alert alert-success mt-4">
+                 <strong>Payment Complete!</strong> You have successfully paid for this auction.
+            </div>
+        {% elif winner.username != user.username %}
+            <div class="alert alert-secondary mt-4">
+                The auction is closed and has been won by another user.
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-warning mt-4">  
+            No bids placed yet. The item was not sold.
+        </div>
+    {% endif %}
+{% endif %}
+
                             <ul class="question-and-wishlist-area">
                             <li>
                                 <a href="contact.html">
@@ -389,3 +414,76 @@
         </div>
     </div>
     {% endblock %}
+    {% block js %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('rzp-button1')) {
+            
+            // Ensure the required context variables are passed from the Django view:
+            // razorpay_key_id, razorpay_order_id, winning_price_in_paise
+            const RAZORPAY_KEY = "{{ razorpay_key_id|default:'' }}";
+            const WINNING_PRICE_PAISE = "{{ winning_price_in_paise|default:'' }}";
+            const RAZORPAY_ORDER_ID = "{{ razorpay_order_id|default:'' }}";
+            const PRODUCT_ID = "{{ product.id }}";
+            const CSRF_TOKEN = '{{ csrf_token }}';
+
+            // Validate that all required Razorpay variables are present
+            if (!RAZORPAY_KEY || !WINNING_PRICE_PAISE || !RAZORPAY_ORDER_ID) {
+                console.error('Razorpay configuration is missing. Please refresh the page.');
+                document.getElementById('rzp-button1').disabled = true;
+                document.getElementById('rzp-button1').textContent = 'Payment initialization failed. Please refresh.';
+                return;
+            }
+
+            var options = {
+                "key": RAZORPAY_KEY,
+                "amount": parseInt(WINNING_PRICE_PAISE),
+                "currency": "INR",
+                "name": "Auction Payment: {{ product.product_name }}",
+                "description": "Winning bid payment for auction product " + PRODUCT_ID,
+                "order_id": RAZORPAY_ORDER_ID,
+                "handler": function (response){
+                    // 1. Send the successful payment response back to Django for server-side verification
+                    fetch("{% url 'razorpay-payment-success' product.id %}", { // IMPORTANT: Define this URL
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': CSRF_TOKEN 
+                        },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // 2. Redirect with a URL parameter to show a success message
+                            window.location.href = "{% url 'auction-details' product.id %}?payment_status=success";
+                        } else {
+                            alert('Payment verification failed on server. Please contact support. Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error during payment verification:', error);
+                        alert('An error occurred during verification. Please contact support.');
+                    });
+                },
+                "prefill": {
+                    "name": "{{ user.get_full_name|default:user.username }}",
+                    "email": "{{ user.email }}",
+                },
+                "theme": {
+                    "color": "#e3b203ff" 
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            document.getElementById('rzp-button1').onclick = function(e){
+                rzp1.open();
+                e.preventDefault(); 
+            }
+        }
+    });
+    </script>
+    {%endblock%}

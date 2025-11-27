@@ -56,12 +56,36 @@
         .card-header {
             padding: 1.5rem;
             border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .card-header h2 {
             font-size: 1.2rem;
             color: var(--primary-color);
             margin: 0;
+        }
+        
+        .add-blog-btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .add-blog-btn:hover {
+            background-color: #2e59d9;
+        }
+        
+        .add-blog-btn i {
+            font-size: 0.9rem;
         }
 
         .card-body {
@@ -183,6 +207,9 @@
         <div class="table-card">
             <div class="card-header">
                 <h2>All Blogs</h2>
+                <a href="{% url 'add_blog' %}" class="add-blog-btn">
+                    <i class="fas fa-plus"></i> Add Blog
+                </a>
             </div>
             
             <div class="card-body">

@@ -262,7 +262,7 @@
                         <div class="col-md-6 mb-30">
                           <div class="form-inner">
                             <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
-                            <input type="date" name="date_of_birth" value="{{ user.date_of_birth|date:'Y-m-d' }}" class="form-control" id="{{ form.date_of_birth.id_for_label }}" >
+                            <input type="date" name="date_of_birth" value="{{ user.date_of_birth|date:'Y-m-d' }}" id="id_date_of_birth" class="form-control">
                             {{ form.date_of_birth.errors }}
                           </div>
                         </div>
@@ -300,7 +300,25 @@
 {% endblock %}
 
 {% block js %}
-  <script>
+<script>
+
+ function getTodayDate() {
+        const today = new Date();
+        // Adjust for timezone offset to get the correct 'day' in UTC
+        const offset = today.getTimezoneOffset() * 60000;
+        const localTime = new Date(today.getTime() - offset);
+        return localTime.toISOString().split('T')[0];
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('id_date_of_birth');
+        
+        if (dateInput) {
+            // Set the 'max' attribute to today's date
+            dateInput.setAttribute('max', getTodayDate());
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
       const fileInput = document.getElementById('{{ form.image.id_for_label }}')
       const fileNameDisplay = document.getElementById('file-name-display')

@@ -1,0 +1,314 @@
+{% include "Admin/admin_header.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Blog - Admin Dashboard</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #858796;
+            --background-color: #f8f9fc;
+            --sidebar-bg: #fff;
+            --card-header-bg: #f8f9fc;
+            --text-color: #5a5c69;
+            --white: #fff;
+            --light-gray: #e3e6f0;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow: auto;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 2rem;
+        }
+
+        .form-card {
+            background-color: var(--white);
+            border-radius: 5px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .card-header h2 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            font-size: 1rem;
+            color: var(--text-color);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .form-control::file-selector-button {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .form-control::file-selector-button:hover {
+            background-color: #2e59d9;
+        }
+
+        .image-preview-container {
+            margin-top: 1rem;
+        }
+
+        .image-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid var(--light-gray);
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #2e59d9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background-color: #6c757d;
+        }
+
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #2e59d9;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <a href="{% url 'admin-manage-blog' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Manage Blogs
+        </a>
+        
+        <h1>Add New Blog</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="form-card">
+            <div class="card-header">
+                <h2>Blog Information</h2>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.category.id_for_label }}">Category *</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="error-message">{{ form.category.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="error-message">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="error-message">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.image.id_for_label }}">Blog Image *</label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                            <div class="error-message">{{ form.image.errors }}</div>
+                        {% endif %}
+                        <div class="image-preview-container">
+                            <img id="previewImage" class="image-preview" alt="Preview Image">
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Publish Blog
+                        </button>
+                        <a href="{% url 'admin-manage-blog' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Image preview functionality
+        const imageInput = document.getElementById("{{ form.image.id_for_label }}");
+        const previewImage = document.getElementById("previewImage");
+
+        if (imageInput && previewImage) {
+            imageInput.addEventListener("change", function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewImage.classList.add("show");
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewImage.classList.remove("show");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

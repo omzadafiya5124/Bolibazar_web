@@ -1,7 +1,7 @@
- {% extends "header_footer.html" %}
+{% extends "header_footer.html" %}
  {% load static %}
 
-{% block title%}Auction{%endblock%}
+{% block title%}Auction{%endblock %}
 {% block content %}
     <!-- Start Breadcrumb section -->
     <div class="breadcrumb-section seven" style="background-image:url({% static "assets/img/inner-pages/breadcrumb-bg7.png" %});">  
@@ -21,302 +21,58 @@
     </div>
     <!-- End Breadcrumb section -->
 
-    <!-- Start Auction Grid Sidebar section -->
+    <!-- Start Auction Grid section (No Sidebar) -->
     <div class="auction-grid-sidebar-section pt-110 mb-110">
         <div class="container">
-            <div class="row gy-5">
-                <div class="col-xl-3 order-xl-1 order-2">
-                    <div class="auction-sidebar">
-                        <form>
-                            <div class="single-widget mb-30">
-                                <div class="search-box">
-                                    <input type="text" placeholder="Search">
-                                    <button type="submit"><i class="bx bx-search"></i></button>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <div class="single-search-box">
-                                    <div class="searchbox-input">
-                                        <label>Sales</label>
-                                        <div class="custom-select-dropdown">
-                                            <div class="select-input">
-                                                <input type="text" readonly value="Online">
-                                                <i class="bi bi-chevron-down"></i>
-                                            </div>
-                                            <div class="custom-select-wrap two">
-                                                <ul class="option-list">
-                                                    <li class="single-item">
-                                                        <h6>Online</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>In-Store</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Phone Order</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Email Order</h6>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <h5 class="widget-title">Category</h5>
-                                <div class="checkbox-container">
-                                    <ul>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Automotive</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Antiques</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Digital Art</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Books & Comic</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Old Coin</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Gadget and Technology</span>
-                                            </label>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <div class="single-search-box">
-                                    <div class="searchbox-input">
-                                        <label>Country</label>
-                                        <div class="custom-select-dropdown">
-                                            <div class="select-input">
-                                                <input type="text" readonly value="Spain">
-                                                <i class="bi bi-chevron-down"></i>
-                                            </div>
-                                            <div class="custom-select-wrap two">
-                                                <ul class="option-list">
-                                                    <li class="single-item">
-                                                        <h6>Spain</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>France</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Brazil</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Bangladesh</h6>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <div class="single-search-box">
-                                    <div class="searchbox-input">
-                                        <label>Period</label>
-                                        <div class="custom-select-dropdown">
-                                            <div class="select-input">
-                                                <input type="text" readonly value="Today  (110)">
-                                                <i class="bi bi-chevron-down"></i>
-                                            </div>
-                                            <div class="custom-select-wrap two">
-                                                <ul class="option-list">
-                                                    <li class="single-item">
-                                                        <h6>Today  (110)</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Yesterday (115)</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Last 7 Days (515)</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Last 30 Days (945)</h6>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <div class="single-search-box">
-                                    <div class="searchbox-input">
-                                        <label>Condition</label>
-                                        <div class="custom-select-dropdown">
-                                            <div class="select-input">
-                                                <input type="text" readonly value="New">
-                                                <i class="bi bi-chevron-down"></i>
-                                            </div>
-                                            <div class="custom-select-wrap two">
-                                                <ul class="option-list">
-                                                    <li class="single-item">
-                                                        <h6>New</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Used</h6>
-                                                    </li>
-                                                    <li class="single-item">
-                                                        <h6>Refurbished</h6>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <h5 class="widget-title">Price</h5>
-                                <div class="range-wrap">
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <input type="hidden" name="min-value" value="">
-                                            <input type="hidden" name="max-value" value="">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                        <div id="slider-range"></div>
-                                        </div>
-                                    </div>
-                                    <div class="slider-labels">
-                                        <div class="caption">
-                                            <span id="slider-range-value1"></span>
-                                        </div>
-                                        <div class="caption">
-                                            <span id="slider-range-value2"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="single-widget mb-30">
-                                <h5 class="widget-title">Type Of Sales</h5>
-                                <div class="checkbox-container">
-                                    <ul>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Upcoming</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Latest</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Highest Bidding</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Live Auction</span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <label class="containerss">
-                                                <input type="checkbox">
-                                                <span class="checkmark"></span>
-                                                <span>Popular</span>
-                                            </label>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </form>
-                        <div class="single-widget">
-                            <h5 class="widget-title">Highest Bidding</h5>
-                            <div class="highest-bidding-widget mb-20">
-                                <div class="highest-bidding-img">
-                                    <a href="auction-details.html"><img src="{% static 'assets/img/inner-pages/highest-bidding-img1.jpg' %}" alt=""></a>
-                                </div>
-                                <div class="highest-bidding-content">
-                                    <h6><a href="auction-details.html">Poutsicle Hydratingani Stain offering.</a></h6>
-                                    <div class="price-area">
-                                        <span>Current Bid at:</span>
-                                        <strong>$4,648</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="highest-bidding-widget mb-20">
-                                <div class="highest-bidding-img">
-                                    <a href="auction-details.html"><img src="{% static 'assets/img/inner-pages/highest-bidding-img2.jpg' %}" alt=""></a>
-                                </div>
-                                <div class="highest-bidding-content">
-                                    <h6><a href="auction-details.html">Heritage Had Curating Watch.</a></h6>
-                                    <div class="price-area">
-                                        <span>Current Bid at:</span>
-                                        <strong>$2,458</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="highest-bidding-widget">
-                                <div class="highest-bidding-img">
-                                    <a href="auction-details.html"><img src="{% static 'assets/img/inner-pages/highest-bidding-img3.jpg' %}" alt=""></a>
-                                </div>
-                                <div class="highest-bidding-content">
-                                    <h6><a href="auction-details.html">Art decorat bronze sculpture.</a></h6>
-                                    <div class="price-area">
-                                        <span>Current Bid at:</span>
-                                        <strong>$2,878</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-xl-9 order-xl-2 order-1">
+            <div class="row">
+                <!-- Main Content takes full width -->
+                <div class="col-xl-12 order-1">
                     <div class="auction-grid-title-section mb-40">
-                        <h6>Showing 1–12 of 101 results</h6>
+                        {% if page_obj.paginator.count %}
+                        <h6>
+                            Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+                        </h6>
+                        {% else %}
+                        <h6>No results found</h6>
+                        {% endif %}
                         <div class="filter-selector">
-                            <div class="selector">
-                                <select>
-                                    <option>Default Sorting</option>
-                                    <option>Price Low to High</option>
-                                    <option>Price High to Low</option>
-                                  </select>
-                            </div>
+                            <!-- START: Combined Filter Form - Will automatically carry all parameters -->
+                            <form method="get" class="d-flex align-items-center flex-wrap gap-2">
+                                <div class="selector">
+                                    <select name="status" onchange="this.form.submit()">
+                                        <option value="">All Status</option>
+                                        <option value="live" {% if selected_status == 'live' %}selected{% endif %}>Live</option>
+                                        <option value="upcoming" {% if selected_status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                                        <option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>Closed</option>
+                                    </select>
+                                </div>
+                                <div class="selector">
+                                    <select name="category" onchange="this.form.submit()">
+                                        <option value="">All Categories</option>
+                                        {% for cat in categories %}
+                                            <option value="{{ cat.id }}" {% if selected_category_id|default:'' == cat.id|stringformat:'s' %}selected{% endif %}>
+                                                {{ cat.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="selector">
+                                    <input type="text"
+                                           name="q"
+                                           value="{{ search_q|default:'' }}"
+                                           placeholder="Search products..."
+                                           style="padding: 6px 10px; border: 1px solid #191717ff; border-radius: 18px; min-width: 200px;">
+                                </div>
+                                <button type="submit" class="primary-btn" style="background:black;padding: 9px 20px; border-radius: 12px;">
+                                    Apply
+                                    <span></span>
+                                </button>
+                            </form>
+                            <!-- END: Combined Filter Form -->
                             <ul class="grid-view d-lg-flex d-none">
                                 <li class="column-2">
+                                    <!-- Grid 2 View Icon -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="20" viewBox="0 0 12 20">
                                         <g>
                                             <rect width="4.88136" height="5.10638" rx="2.44068" />
@@ -328,7 +84,8 @@
                                         </g>
                                     </svg>
                                 </li>
-                                <li class="column-3 active">
+                                <li class="column-3">
+                                     <!-- Grid 4 View Icon (Changed to be the active one to match product columns) -->
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
                                         <g clip-path="url(#clip0_1610_1442)">
                                             <rect width="5.10638" height="5.10638" rx="2.55319" />
@@ -343,19 +100,37 @@
                                         </g>
                                     </svg>
                                 </li>
+                                <li class="column-4 active">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                                        <g clip-path="url(#clip0_1610_1453)">
+                                        <rect width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect y="8.17627" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect y="16" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="5.31909" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="5.31909" y="8.17627" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="5.31909" y="16" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="10.6382" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="16.3525" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="10.6384" y="8.17627" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="16.3525" y="8.17627" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="10.6382" y="16" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        <rect x="16.3525" y="16" width="3.64741" height="3.64741" rx="1.8237"/>
+                                        </g>
+                                    </svg>
+                                </li>
                             </ul>
                         </div>
                     </div>
 
                     <div class="list-grid-product-wrap">
                         <div class="row g-4 mb-60">
-                            {% for product in products %}
-                            <div class="col-lg-4 col-md-6 item wow animate fadeInDown" data-wow-delay="200ms" data-wow-duration="1500ms">
+                            {% for product in page_obj %}
+                            <!-- CHANGE: col-lg-4 to col-lg-3 for 4 products per row -->
+                            <div class="col-lg-3 col-md-6 item wow animate fadeInDown" data-wow-delay="200ms" data-wow-duration="1500ms">
                                 <div class="auction-card style-7">
                                     <div class="auction-card-img-wrap">
                                        <a href="{% url 'auction-details' product.id %}" class="card-img">
                                             {% if product.main_image %}
-                                            <!-- REMOVED width/height attributes and ADDED a class -->
                                             <img class="product-card-image" src="{{ product.main_image.url }}" alt="{{ product.product_name }}">
                                             {% else %}
                                             <img class="product-card-image" src="{% static 'images/default-product.jpg' %}" alt="No image">
@@ -445,7 +220,7 @@
                                                 {%if product.is_sold %}
                                                     <a href="{% url 'auction-details' product.id %}" class="bid-btn">Sold Out</a>
                                                 {%else%}
-                                                    <a   class="bid-btn">Not Sold</a>
+                                                    <a class="bid-btn" style="background:#dc3545;">Not Sold</a>
                                                 {%endif%}
                                             {%else%}
                                                 <a href="{% url 'auction-details' product.id %}" class="bid-btn">Coming Soon</a>
@@ -454,39 +229,65 @@
                                     </div>
                                 </div>
                             </div>
+                            {% empty %}
+                            <div class="col-lg-12">
+                                <p>No auctions found matching your criteria.</p>
+                            </div>
                             {% endfor %}
                         </div>
-                    </div>
+                        
+                        <!-- Paginator Section -->
+                        {% if page_obj.paginator.num_pages > 1 %}
+                        <div class="row">
+                            <div class="col-lg-12 d-flex justify-content-center wow animate fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
+                                <div class="inner-pagination-area">
+                                    <ul class="paginations">
+                                            <!-- Previous Page Link -->
+                                            {% if page_obj.has_previous %}
+                                            <li class="page-item paginations-button">
+                                                <a href="?page={{ page_obj.previous_page_number }}{{ current_query_params }}">
+                                                    <svg width="16" height="13" viewBox="0 0 16 13" xmlns="http://www.w3.org/2000/svg">
+                                                        <path
+                                                            d="M1.34284 10.1026L15.557 1.89603M1.34284 10.1026C4.16124 8.59083 6.21454 3.68154 4.37169 0.489511M1.34284 10.1026C4.16124 8.59083 9.43959 9.2674 11.2824 12.4593" stroke-width="0.96" stroke-linecap="round" transform="scale(-1, 1) translate(-16, 0)"/>
+                                                    </svg>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            <!-- Page Number Links (shows a max of 5 pages around current page for cleaner view) -->
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if num == page_obj.number %}
+                                                    <li class="page-item active">
+                                                        <a href="#">{{ num|stringformat:"02d" }}</a>
+                                                    </li>
+                                                {% elif num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+                                                    <li class="page-item">
+                                                        <a href="?page={{ num }}{{ current_query_params }}">{{ num|stringformat:"02d" }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
 
-                    <div class="row">
-                        <div class="col-lg-12 d-flex justify-content-center wow animate fadeInUp" data-wow-delay="400ms" data-wow-duration="1500ms">
-                            <div class="inner-pagination-area">
-                                <ul class="paginations">
-                                    <li class="page-item active">
-                                        <a href="#">01</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a href="#">02</a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a href="#">03</a>
-                                    </li>
-                                    <li class="page-item paginations-button">
-                                        <a href="#">
-                                            <svg width="16" height="13" viewBox="0 0 16 13" xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M15.557 10.1026L1.34284 1.89603M15.557 10.1026C12.9386 8.59083 10.8853 3.68154 12.7282 0.489511M15.557 10.1026C12.9386 8.59083 7.66029 9.2674 5.81744 12.4593" stroke-width="0.96" stroke-linecap="round" />
-                                            </svg>
-                                        </a>
-                                    </li>
-                                </ul>
+                                            <!-- Next Page Link -->
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item paginations-button">
+                                                <a href="?page={{ page_obj.next_page_number }}{{ current_query_params }}">
+                                                    <svg width="16" height="13" viewBox="0 0 16 13" xmlns="http://www.w3.org/2000/svg">
+                                                        <path
+                                                            d="M15.557 10.1026L1.34284 1.89603M15.557 10.1026C12.9386 8.59083 10.8853 3.68154 12.7282 0.489511M15.557 10.1026C12.9386 8.59083 7.66029 9.2674 5.81744 12.4593" stroke-width="0.96" stroke-linecap="round" />
+                                                    </svg>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- End Auction Grid Sidebar section -->
+    <!-- End Auction Grid section -->
    
 {% endblock %}

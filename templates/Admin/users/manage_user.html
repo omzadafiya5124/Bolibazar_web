@@ -278,6 +278,7 @@
         document.getElementById('addUserBtn').addEventListener('click', function(){ loadForm('{% url "admin-user-new" %}', 'Add User'); });
         document.querySelectorAll('.js-edit-user').forEach(function(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); const id = btn.getAttribute('data-user-id'); const url = '{% url "admin-user-edit" 0 %}'.replace('/0/','/' + id + '/'); loadForm(url, 'Edit User'); }); });
     })();
+
     </script>
 </body>
 </html>

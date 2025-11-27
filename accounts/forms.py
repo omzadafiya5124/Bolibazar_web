@@ -109,6 +109,7 @@ class RegistrationForm(forms.ModelForm):
             self.add_error('confirm_password', "Passwords do not match.")
         return cleaned_data
 
+
     def save(self, commit=True):
         # The password is now set in the view, so we just call the parent save method
         user = super().save(commit=commit)
