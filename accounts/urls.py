@@ -21,7 +21,6 @@ urlpatterns = [
     path('auction/', views.auction, name="auction"),
     path('auction-details/<int:pk>/', views.auc_details, name="auction-details"),
     path('auction-details/<int:pk>/place_bid/', views.place_bid, name="place_bid"),
-    path('add_category/', views.add_category, name='add_category'),
     path('category_details/<int:pk>/', views.category_details, name="category_details"),
     path('category/',views.category, name="category"),
     path('contact/',views.contact, name="contact"),
@@ -40,6 +39,9 @@ urlpatterns = [
     path('edit-profile/edit/', views.edit_profile, name='edit_profile'),
     path('password/change/', views.change_password, name='change_password'),
     path('help_and_support/',views.help_support, name="help_support"),
+    
+    #seller and bidder show product and seller add the product
+
     path('user_auction/',views.user_auction,name="user_auction"),
         #For contect Form
     path('submit-contact/', views.contact_view, name='submit_contact_form'),
@@ -48,13 +50,11 @@ urlpatterns = [
 
     # path('blogs/', views.blog, name='blog_list'),
     path('blogs/<int:pk>/', views.blog, name='blog'),
-    path('add_blog/', views.add_blog, name='add_blog'),
+    path('add_blog/',views.add_blog,name="add_blog"),
 
     path('dashboard-admin/', views.dashboardAdmin, name='dashboard-admin'),
     path('admin-manage-product/', views.adminManageProduct, name='admin-manage-product'),
-    #delete pro
     path('admin-delete-product/<int:product_id>/', views.deleteProduct, name='delete-product'),
-    # product add/edit modal endpoints
     path('admin-product/new/', views.admin_product_form, name='admin-product-new'),
     path('admin-product/<int:pk>/edit/', views.admin_product_edit, name='admin-product-edit'),
     
@@ -71,5 +71,13 @@ urlpatterns = [
     # admin reviews
     path('admin-manage-review/', views.adminManageReview, name='admin-manage-review'),
     path('admin-delete-review/<int:review_id>/', views.deleteReview, name='delete-review'),
+    # search API
+    path('api/instant-search/', views.instant_search, name='instant-search'),
+
+    path('admin-manage-blog/', views.adminManageBlog, name='admin-manage-blog'),
+    path('admin-delete-blog/<int:blog_id>/', views.deleteBlog, name='delete-blog'),
+
+    # admin CSV download
+    path('admin-manage-product/export-csv/', views.export_products_csv_view, name='export_products_csv'),
 ]
 

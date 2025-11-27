@@ -88,17 +88,6 @@
                                                 </a>
                                             </li>
                                             </ul>
-                                            <div class="countdown-timer">
-                                             <ul data-countdown="{{ product.countdown_start|date:'Y-m-d H:i:s' }}">
-                                                <li class="times" data-days="00">00</li>
-                                                <li class="colon">:</li>
-                                                <li class="times" data-hours="00">00</li>
-                                                <li class="colon">:</li>
-                                                <li class="times" data-minutes="00">00</li>
-                                                <li class="colon">:</li>
-                                                <li class="times" data-seconds="00">00</li>
-                                            </ul>
-                                        </div>
                                         </div>
                                         <div class="auction-card-content">
                                             <h6><a href="{% url 'auction-details' product.id %}">{{ product.product_name }}</a></h6>

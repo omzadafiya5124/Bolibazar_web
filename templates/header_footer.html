@@ -115,7 +115,56 @@
 .auction-card-img-wrap .card-img:hover .product-card-image {
     transform: scale(1.05); 
 }
- 
+
+#searchResultsContainer 
+{
+    position: absolute;
+    top: 100px; /* Adjust this value if your header height changes */
+    left: 0;
+    right: 0;
+    width: 90%;
+    max-width: 1200px; /* Adjust to match your content container width */
+    margin: 0 auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 100; /* Ensure it's above other page content */
+    display: none; /* Hide by default */
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 0 0 8px 8px;
+}
+#searchResultsContainer h5 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    color: #333;
+}
+#searchResultsContainer ul {
+    list-style: none;
+    padding: 0;
+}
+#searchResultsContainer ul li a {
+    display: block;
+    padding: 8px 0;
+    color: #555;
+    text-decoration: none;
+    border-bottom: 1px dotted #eee;
+    transition: color 0.2s;
+}
+#searchResultsContainer ul li a:hover {
+    color: #007bff;
+}
+.search-no-results {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+}
+
 </style>
     {% block extra_css %}{% endblock%}
 </head>
@@ -173,8 +222,9 @@
                   
                     <form class="d-lg-none d-flex">
                         <div class="form-inner">
-                            <input type="text" placeholder="Search your product...">
-                            <button class="search-btn">
+                            <!-- Added name="q" and a common class/ID strategy -->
+                            <input type="text" placeholder="Search your product..." name="q" class="search-input-js">
+                            <button class="search-btn" type="submit">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
@@ -203,10 +253,12 @@
                 </div>
             </div>
             <div class="nav-right d-flex jsutify-content-end align-items-center">
+                <!-- 1. PRIMARY DESKTOP SEARCH FORM MODIFIED -->
                 <form class="d-xl-flex d-none">
                     <div class="form-inner">
-                        <input type="text" placeholder="Search your product...">
-                        <button class="search-btn">
+                        <!-- Added name="q" and a common class/ID strategy -->
+                        <input type="text" placeholder="Search your product..." name="q" class="search-input-js" id="desktopSearchInput">
+                        <button class="search-btn" type="submit">
                             <i class="bi bi-search"></i>
                         </button>
                     </div>
@@ -220,12 +272,12 @@
                         <form>
                             <div class="search-group">
                                 <div class="form-inner2">
-                                    <input type="text" placeholder="Search your product...">
+                                    <!-- Added name="q" and a common class/ID strategy -->
+                                    <input type="text" placeholder="Search your product..." name="q" class="search-input-js">
                                     <button type="submit">
                                         <svg width="16" height="16" viewBox="0 0 16 16"
                                             xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd" clip-rule="evenodd"
-                                                d="M7.67458 2.95934C5.06925 2.95934 2.95925 5.06868 2.95925 7.66868C2.95925 10.2687 5.06925 12.3773 7.67458 12.3773C8.97459 12.3773 10.1499 11.8533 11.0033 11.004C11.4434 10.5674 11.7926 10.0477 12.0307 9.47524C12.2687 8.90273 12.3908 8.28869 12.3899 7.66868C12.3899 5.06868 10.2799 2.95934 7.67458 2.95934ZM1.33325 7.66868C1.33325 4.16868 4.17325 1.33334 7.67458 1.33334C11.1759 1.33334 14.0159 4.16868 14.0159 7.66868C14.0178 9.07185 13.5516 10.4356 12.6913 11.544L14.4279 13.2787C14.5084 13.353 14.573 13.4427 14.618 13.5426C14.6629 13.6424 14.6872 13.7503 14.6894 13.8598C14.6916 13.9693 14.6717 14.0781 14.6309 14.1797C14.59 14.2813 14.5291 14.3736 14.4517 14.4511C14.3743 14.5286 14.2821 14.5896 14.1805 14.6306C14.079 14.6716 13.9702 14.6916 13.8607 14.6895C13.7512 14.6874 13.6433 14.6632 13.5434 14.6184C13.4435 14.5736 13.3536 14.5091 13.2793 14.4287L11.5393 12.6913C10.4316 13.544 9.07244 14.0054 7.67458 14.0033C4.17325 14.0033 1.33325 11.168 1.33325 7.66868Z" />
+                                            <!-- ... (SVG path) ... -->
                                         </svg>
                                     </button>
                                 </div>
@@ -236,7 +288,7 @@
                    <!-- ============================================== -->
                 <!-- === DYNAMIC BLOCK FOR DESKTOP VIEW STARTS HERE === -->
                 <!-- ============================================== -->
-                 <div class="d-lg-flex d-none align-items-center">
+                <div class="d-lg-flex d-none align-items-center">
                 {% if user.is_authenticated %}
                     <!-- This is the new hover dropdown for desktop -->
                     <div class="user-menu-container">
@@ -257,15 +309,19 @@
                         My Account
                     </a>
                 {% endif %}
-            </div>  
+                </div>  
                 <!-- ============================================ -->
                 <!-- === DYNAMIC BLOCK FOR DESKTOP VIEW ENDS HERE === -->
                 <!-- ============================================ -->
-                <div class="sidebar-button mobile-menu-btn">
+                 <div class="sidebar-button mobile-menu-btn">
                     <span></span>
                 </div>
             </div>
         </header>
+    </div>
+
+     <div id="searchResultsContainer">
+        <!-- Results will be injected here by JavaScript -->
     </div>
 
     {%block content%}{%endblock%}
@@ -319,13 +375,9 @@
                                 </div>
                                 <div class="menu-container">
                                     <ul class="widget-list">
-                                        <li><a href="auction-grid.html">Automotive</a></li>
-                                        <li><a href="auction-grid.html">Antiques</a></li>
-                                        <li><a href="auction-grid.html">Digital art</a></li>
-                                        <li><a href="auction-grid.html">Books & comics</a></li>
-                                        <li><a href="auction-grid.html">Gadget</a></li>
-                                        <li><a href="auction-grid.html">Electronics</a></li>
-                                        <li><a href="auction-grid.html">Coin</a></li>
+                                        {% for category in categories1 %}
+                                        <li><a href="{% url 'category_details' category.id %}">{{category.name}}</a></li>
+                                        {%endfor%}
                                     </ul>
                                 </div>
                             </div>
@@ -337,11 +389,10 @@
                                 </div>
                                 <div class="menu-container">
                                     <ul class="widget-list">
-                                        <li><a href="how-to-buy.html">How to bid with us</a></li>
-                                        <li><a href="how-to-sell.html">How to sell with us</a></li>
-                                        <li><a href="about.html">About us</a></li>
-                                        <li><a href="faq.html">F.A.Q</a></li>
-                                        <li><a href="#">Our Brand</a></li>
+                                        <li><a href="{% url 'how-to-bid'%}">How to bid with us</a></li>
+                                        <li><a href="{% url 'how-to-sell'%}">How to sell with us</a></li>
+                                        <li><a href="{% url 'about'%}">About us</a></li>
+                                        <li><a href="{% url 'faqs' %}">F.A.Q</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -353,26 +404,30 @@
                                 </div>
                                 <div class="menu-container">
                                     <ul class="widget-list">
-                                        <li><a href="support-center.html">Help & Support</a></li>
-                                        <li><a href="faq.html">FAQ Probid</a></li>
-                                        <li><a href="contact.html">Contact Us</a></li>
-                                        <li><a href="terms-condition.html">Terms of Service</a></li>
+                                        <li><a href="{%url 'help_support'%}">Help & Support</a></li>
+                                        <li><a href="{%url 'contact'%}">Contact Us</a></li>
+                                        <li><a href="{%url 'terms_condition'%}">Terms of Service</a></li>
                                         <li><a href="{% url 'privacy_policy' %}">Our Policy</a></li>
-                                        <li><a href="#">Sell Support</a></li>
+
                                     </ul>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 d-flex align-items-center justify-content-md-end justify-content-start">
                             <div class="newletter-and-payment-wrap">
-                                <div class="newletter-area">
-                                    <h4>Join Our Newsletter & More information.</h4>
-                                    <form>
-                                        <div class="form-inner">
-                                            <input type="email" placeholder="Email Address">
-                                            <button type="submit"><i class="bi bi-arrow-right"></i></button>
-                                        </div>
-                                    </form>
+                                <div class="newletter-area" style="text-align:center; padding:30px;">
+                                    <h4 style="font-size:26px; font-weight:700; margin-bottom:15px;">
+                                        Join Our Newsletter Get updates, offers, and news.
+                                    </h4>
+
+                                    <div style="margin-top:15px; font-size:15px; color:#444;">
+                                        Proudly supported by <strong>Waterland Group</strong> — our official sponsor.
+                                        <br>
+                                        <a href="https://waterland-ten.vercel.app" target="_blank" 
+                                        style="color:#007bff; text-decoration:none; font-weight:600;">
+                                            waterland-ten.vercel.app
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="payment-area">
                                     <h6>Secured Payment Gateways</h6>
@@ -406,6 +461,126 @@
     <!-- End Footer section -->
     <!--  Main jQuery  -->
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    // Select all search inputs using the common class
+    const searchInputs = document.querySelectorAll('.search-input-js');
+    const resultsContainer = document.getElementById('searchResultsContainer');
+    
+    // IMPORTANT: Define your Django URL for the AJAX endpoint here
+    const searchApiUrl = "/api/instant-search/"; 
+    
+    let debounceTimer; 
+
+    // --- REVISED displayResults FUNCTION ---
+    function displayResults(data) {
+        let html = '';
+        let totalResults = 0;
+
+        // Helper function to build list HTML from the array of objects (title, url)
+        function buildList(title, items) {
+            if (items.length > 0) {
+                totalResults += items.length;
+                html += `<h5>${title} (${items.length})</h5><ul>`;
+                items.forEach(item => {
+                    // Item already contains the final 'title' and 'url'
+                    html += `<li><a href="${item.url}">${item.title}</a></li>`;
+                });
+                html += '</ul>';
+            }
+        }
+        
+        // Render results for each model type using the explicit data from the backend
+        buildList('Auction Products', data.products);
+        buildList('Categories', data.categories);
+        buildList('Blog Posts', data.blogs);
+
+
+        if (totalResults === 0) {
+            html = '<div class="search-no-results">No results found. Try a different search term.</div>';
+            resultsContainer.style.display = 'block'; // Still show the 'No results' message
+        } else {
+            resultsContainer.style.display = 'block';
+        }
+
+        resultsContainer.innerHTML = html;
+        
+        // Hide the container if the query is empty
+        const currentQuery = Array.from(searchInputs).find(i => document.activeElement === i)?.value.trim() || '';
+        if (currentQuery.length < 2) {
+             resultsContainer.style.display = 'none';
+        }
+    }
+
+    // --- REVISED performSearch FUNCTION ---
+    function performSearch(query) {
+        if (query.length < 2) { // Minimum 2 characters to start searching
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        
+        // Show a loading state (optional)
+        resultsContainer.innerHTML = '<div class="search-no-results">Searching...</div>';
+        resultsContainer.style.display = 'block';
+
+
+        // Fetch data from the Django endpoint
+        fetch(`${searchApiUrl}?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server search failed.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayResults(data);
+            })
+            .catch(error => {
+                console.error('AJAX Search Error:', error);
+                resultsContainer.innerHTML = '<div class="search-no-results">An error occurred during search.</div>';
+                resultsContainer.style.display = 'block';
+            });
+    }
+
+    // Attach event listeners to all search inputs
+    searchInputs.forEach(input => {
+        // Use 'input' event for instant search
+        input.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Mirror the input value to other search boxes for seamless experience
+            searchInputs.forEach(otherInput => {
+                if (otherInput !== this) {
+                    otherInput.value = query;
+                }
+            });
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                performSearch(query);
+            }, 300); // 300ms debounce for better performance
+        });
+
+        // Prevent form submission redirect
+        input.closest('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            performSearch(input.value.trim());
+        });
+    });
+
+    // Close results when clicking outside
+    document.addEventListener('click', function(e) {
+        const isInput = Array.from(searchInputs).some(input => input.contains(e.target));
+        const isResults = resultsContainer.contains(e.target);
+
+        if (!isInput && !isResults) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+});
+
+
+
+
         document.addEventListener('DOMContentLoaded', function() {
         // Find the mobile user menu container
         const mobileMenu = document.querySelector('.mobile-user-menu');

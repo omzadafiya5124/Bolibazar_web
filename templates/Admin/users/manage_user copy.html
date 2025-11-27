@@ -1,0 +1,289 @@
+{% include "Admin/admin_header.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin</title>
+    <style>
+        :root { --light-gray:#e3e6f0; --text-color:#5a5c69; --primary:#4e73df; --white:#fff; --success:#1cc88a; --danger:#e74a3b; --warning:#f6c23e; }
+        .main-content { flex-grow:1; padding:1rem; }
+        .tabs { display:flex; gap:8px; margin: 0 0 12px; }
+        .tab-btn { border:1px solid var(--light-gray); background:#f9fafc; color:var(--text-color); padding:.5rem .9rem; border-radius:999px; cursor:pointer; }
+        .tab-btn.active { background: var(--primary); color:#fff; }
+        .card { background:var(--white); border:1px solid var(--light-gray); border-radius:16px; box-shadow:0 10px 30px rgba(58,59,69,.12); padding: 1rem 1.25rem; }
+        .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: .75rem; }
+        .header h2 { margin:0; color:var(--text-color); font-size:1.25rem; }
+        .header-tools { display:flex; gap:8px; align-items:center; }
+        .search { display:flex; align-items:center; gap:8px; background:#f9fafc; border:1px solid var(--light-gray); border-radius:8px; padding:.45rem .6rem; }
+        .search input { border:none; outline:none; background:transparent; color:var(--text-color); width:220px; }
+        .table-responsive { overflow:auto; max-height:75vh; border-top:1px solid var(--light-gray); }
+        table { width:100%; min-width:900px; border-collapse:separate; border-spacing:0; font-size:13px; table-layout:fixed; }
+        thead th { position:sticky; top:0; background:#f9fafc; z-index:1; white-space:normal; overflow:visible; text-overflow:clip; }
+        th, td { padding:10px 12px; border-bottom:1px solid var(--light-gray); text-align:left; }
+        tbody td { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        thead th:first-child { border-top-left-radius:10px; }
+        thead th:last-child { border-top-right-radius:10px; }
+        tbody tr:last-child td:first-child { border-bottom-left-radius:10px; }
+        tbody tr:last-child td:last-child { border-bottom-right-radius:10px; }
+        tbody tr:nth-child(even){ background:#fbfbfd; }
+        /* column sizing for readability */
+        .col-avatar{ width:80px; }
+        .col-username{ width:170px; }
+        .col-email{ width:240px; }
+        .col-mobile{ width:140px; }
+        .col-dob{ width:130px; }
+        .col-gender{ width:110px; }
+        .col-role{ width:110px; }
+        .col-status{ width:110px; }
+        .col-actions{ width:120px; }
+        .badge { display:inline-block; padding:.20rem .5rem; border-radius:999px; font-size:11px; font-weight:600; }
+        .badge-role { background:#e8f0ff; color:#2e59d9; }
+        .badge-active { background:#e6f8f1; color:#0f9d58; }
+        .badge-inactive { background:#fdecea; color:#c0392b; }
+        .action-btns { display:flex; align-items:center; gap:10px; justify-content:center; }
+        .action-btns a.edit-btn, .action-btns button.delete-btn { 
+            display:inline-flex; align-items:center; justify-content:center; 
+            width:40px; height:40px; padding:0; border:none; border-radius:10px; cursor:pointer; 
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+        }
+        .action-btns a.edit-btn { background:#f6c23e; color:#fff; }
+        .action-btns a.edit-btn:hover { filter:brightness(.95); }
+        .action-btns button.delete-btn { background:#e74a3b; color:#fff; }
+        .action-btns button.delete-btn:hover { filter:brightness(.95); }
+        .action-btns i { font-size:16px; color:#fff; }
+        .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.6rem 1rem; border:none; border-radius:10px; cursor:pointer; font-weight:600; }
+        .btn-primary { background:var(--primary); color:#fff; }
+        #modalOverlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,.45); padding:16px; z-index:1000; }
+        #modalCard { background:#fff; width:min(820px, 100%); max-height:90vh; overflow:auto; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.2); border:1px solid var(--light-gray); }
+        @media (max-width: 576px){
+            #modalCard { border-radius: 0; width:100%; height:100%; max-height:100vh; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        
+        <h1>Manage Users</h1>
+        <div class="toolbar">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="sellers">Sellers</button>
+                <button class="tab-btn" data-tab="bidders">Bidders</button>
+            </div>
+            <div class="header-tools">
+                <div class="search"><i class="fas fa-search" style="color:#9aa0a6"></i><input id="userSearch" type="text" placeholder="Search users..." /></div>
+                <button id="addUserBtn" class="btn btn-primary" title="Add User"><i class="fas fa-user-plus"></i>Add</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table id="table-sellers">
+                    <thead>
+                        <tr>
+                            <th class="col-avatar">Avatar</th>
+                            <th class="col-username">Username</th>
+                            <th class="col-email">Email</th>
+                            <th class="col-mobile">Mobile</th>
+                            <th class="col-dob">DOB</th>
+                            <th class="col-gender">Gender</th>
+                            <th class="col-role">Role</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in sellers %}
+                        <tr>
+                            <td>{% if u.image %}<img src="{{ u.image.url }}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">{% else %}—{% endif %}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>{{ u.mobile_number }}</td>
+                            <td>{{ u.date_of_birth }}</td>
+                            <td>{{ u.gender }}</td>
+                            <td><span class="badge badge-role">{{ u.account_type }}</span></td>
+                            <td>{% if u.is_active %}<span class="badge badge-active">Active</span>
+                                {% else %}
+                                <span class="badge badge-inactive">Inactive</span>
+                                {% endif %}</td>
+                            <td class="action-btns">
+                                <a href="#" class="edit-btn js-edit-user" data-user-id="{{ u.id }}" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'admin-user-delete' u.id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="delete-btn" title="Delete" onclick="return confirm('Delete user {{ u.username }}?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" style="text-align:center; padding:1.5rem;">No sellers found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <table id="table-bidders" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th class="col-avatar">Avatar</th>
+                            <th class="col-username">Username</th>
+                            <th class="col-email">Email</th>
+                            <th class="col-mobile">Mobile</th>
+                            <th class="col-dob">DOB</th>
+                            <th class="col-gender">Gender</th>
+                            <th class="col-role">Role</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in bidders %}
+                        <tr>
+                            <td>{% if u.image %}<img src="{{ u.image.url }}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">{% else %}—{% endif %}</td>
+                            <td>{{ u.username }}</td>
+                            <td>{{ u.email }}</td>
+                            <td>{{ u.mobile_number }}</td>
+                            <td>{{ u.date_of_birth }}</td>
+                            <td>{{ u.gender }}</td>
+                            <td><span class="badge badge-role">{{ u.account_type }}</span></td>
+                            <td>{% if u.is_active %}<span class="badge badge-active">Active</span>{% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}</td>
+                            <td class="action-btns">
+                                <a href="#" class="edit-btn js-edit-user" data-user-id="{{ u.id }}" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'admin-user-delete' u.id %}" method="POST" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="delete-btn" title="Delete" onclick="return confirm('Delete user {{ u.username }}?');">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9" style="text-align:center; padding:1.5rem;">No bidders found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Root -->
+    <div id="modalOverlay">
+        <div id="modalCard">
+            <div style="display:flex; align-items:center; justify-content: space-between; padding: 16px 20px; border-bottom:1px solid var(--light-gray);">
+                <h3 id="modalTitle" style="margin:0; font-size:18px;">User</h3>
+                <button id="modalCloseBtn" style="border:none; background:transparent; font-size:22px; cursor:pointer">×</button>
+            </div>
+            <div id="modalBody" style="padding:20px;"></div>
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        // Tabs
+        const sellersBtn = document.querySelector('.tab-btn[data-tab="sellers"]');
+        const biddersBtn = document.querySelector('.tab-btn[data-tab="bidders"]');
+        const sellersTable = document.getElementById('table-sellers');
+        const biddersTable = document.getElementById('table-bidders');
+        sellersBtn.addEventListener('click', function(){ sellersBtn.classList.add('active'); biddersBtn.classList.remove('active'); sellersTable.style.display=''; biddersTable.style.display='none'; });
+        biddersBtn.addEventListener('click', function(){ biddersBtn.classList.add('active'); sellersBtn.classList.remove('active'); biddersTable.style.display=''; sellersTable.style.display='none'; });
+
+        // Search filter
+        const searchInput = document.getElementById('userSearch');
+        function filterTable(table){
+            const q = (searchInput.value || '').toLowerCase();
+            table.querySelectorAll('tbody tr').forEach(function(row){
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+        searchInput.addEventListener('input', function(){
+            if(sellersTable.style.display !== 'none') filterTable(sellersTable); else filterTable(biddersTable);
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const overlay = document.getElementById('modalOverlay');
+        const body = document.getElementById('modalBody');
+        const title = document.getElementById('modalTitle');
+        const closeBtn = document.getElementById('modalCloseBtn');
+        function openModal(modalTitle){ title.textContent = modalTitle || 'User'; overlay.style.display = 'flex'; }
+        function closeModal(){ overlay.style.display = 'none'; body.innerHTML=''; }
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e){ if(e.target===overlay){ closeModal(); }});
+
+        function bindFormSubmit(formEl, submitUrl){
+            formEl.addEventListener('submit', function(e){
+                e.preventDefault();
+                const fd = new FormData(formEl);
+                fetch(submitUrl, { method:'POST', headers:{ 'X-CSRFToken': getCookie('csrftoken') }, body: fd })
+                .then(async (res)=>{
+                    const ct = res.headers.get('content-type') || '';
+                    if(res.ok){ try{ const data = await res.json(); if(data.ok){ window.location.reload(); return; } }catch(_){} window.location.reload(); return; }
+                    if(ct.includes('text/html')){ const html = await res.text(); body.innerHTML = html; const newForm = body.querySelector('form'); bindFormSubmit(newForm, submitUrl); }
+                });
+            });
+            const cancelBtn = body.querySelector('#modalCancelBtn'); if(cancelBtn){ cancelBtn.addEventListener('click', closeModal); }
+        }
+
+        function loadForm(url, header){
+            openModal(header);
+            body.innerHTML = '<div>Loading...</div>';
+            fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' }})
+                .then(r=>r.text())
+                .then(html=>{ 
+                    body.innerHTML = html; 
+                    const form = body.querySelector('form'); 
+                    bindFormSubmit(form, url); 
+                    // Re-apply client enhancements (DOB max)
+                    var dob = body.querySelector('input[type="date"][name="date_of_birth"]');
+                    if(dob){
+                        var t = new Date(); var m=(t.getMonth()+1).toString().padStart(2,'0'); var d=t.getDate().toString().padStart(2,'0');
+                        dob.setAttribute('max', t.getFullYear()+'-'+m+'-'+d);
+                    }
+                    initUserFormEnhancements();
+                });
+        }
+
+        function initUserFormEnhancements(){
+            // File input choose icon fix: make preview and button trigger file dialog
+            var fileInput = body.querySelector('#id_image') || body.querySelector('input[type="file"][name="image"]');
+            var preview = body.querySelector('#avatarPreview');
+            var changeBtn = body.querySelector('#triggerChangeImage');
+            if(fileInput && changeBtn){ changeBtn.addEventListener('click', function(){ fileInput.click(); }); }
+            if(fileInput && preview){
+                fileInput.addEventListener('change', function(){
+                    if(fileInput.files && fileInput.files[0]){
+                        preview.src = URL.createObjectURL(fileInput.files[0]);
+                        preview.style.display = '';
+                    }
+                });
+                // Also allow clicking avatar image to open chooser
+                preview.addEventListener('click', function(){ if(fileInput) fileInput.click(); });
+            }
+        }
+
+        document.getElementById('addUserBtn').addEventListener('click', function(){ loadForm('{% url "admin-user-new" %}', 'Add User'); });
+        document.querySelectorAll('.js-edit-user').forEach(function(btn){ btn.addEventListener('click', function(e){ e.preventDefault(); const id = btn.getAttribute('data-user-id'); const url = '{% url "admin-user-edit" 0 %}'.replace('/0/','/' + id + '/'); loadForm(url, 'Edit User'); }); });
+    })();
+    </script>
+</body>
+</html>
+

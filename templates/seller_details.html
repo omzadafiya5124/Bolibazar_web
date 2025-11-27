@@ -479,6 +479,7 @@
                                     </li>
                                 </ul>
                                 <!-- Countdown Timer -->
+                                 {% if product.auction_status == "live" %}
                                 <div class="countdown-timer">
                                     <ul data-countdown="{{ product.countdown_start|date:'Y-m-d H:i:s' }}">
                                         <li class="times" data-days="00">00</li>
@@ -490,6 +491,7 @@
                                         <li class="times" data-seconds="00">00</li>
                                     </ul>
                                 </div>
+                                {%endif%}
                             </div>
 
                             <div class="auction-card-content">

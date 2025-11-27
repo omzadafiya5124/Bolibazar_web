@@ -163,6 +163,9 @@
                                     💰 <strong>Winning Bid:</strong> ₹{{ highest_bid.bid_amount }} <br>
                                     🕒 <strong>Placed on:</strong> {{ highest_bid.bid_time|date:"M d, Y H:i" }}
                                     </div>
+                                    {% if winner.username == user.username%}
+                                        <p>absjchsab jbxiqwbi</p>
+                                    {%endif%}
                                 {% else %}
                                     <div class="alert alert-warning mt-4">
                                     No bids placed yet.

@@ -135,6 +135,16 @@ class Product(models.Model):
         # Then, call the superclass's delete method to remove the database record
         super().delete(*args, **kwargs)
 
+      # for print status
+    def auction_status(self):
+        now = timezone.now()
+        if self.auction_start_date_time <= now <= self.auction_end_date_time:
+            return "live"       # Used for 'Active' or 'Live' status
+        elif now < self.auction_start_date_time:
+            return "upcoming"   # Used for 'Pending' or 'Upcoming' status
+        else:
+            return "closed"
+
 class Wishlist(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
     products = models.ManyToManyField(Product, blank=True)

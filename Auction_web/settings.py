@@ -73,6 +73,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.media',
                 'accounts.context_processors.user_wishlist_products',
+                'accounts.context_processors.global_categories'
             ],
         },
     },

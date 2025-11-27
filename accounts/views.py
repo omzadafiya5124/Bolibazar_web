@@ -2,6 +2,7 @@ import json
 import random, sys
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect,get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -13,7 +14,7 @@ from django.core.files.base import ContentFile
 import base64
 from django.core.paginator import Paginator
 from django.core.files.storage import default_storage
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.db.models import Count
 from django.db.models import Max
 #For Admin
@@ -23,6 +24,9 @@ from django.contrib.auth import update_session_auth_hash
 from .forms import ProductForm,ReviewForm
 from .models import User,Product,Wishlist,Category,Blog,Bidding,Review
 from django.utils import timezone
+from datetime import timedelta
+import json
+from django.db.models import Q
 
 
 #For edit profile
@@ -31,10 +35,15 @@ from django.http import JsonResponse
 from django.contrib.auth import update_session_auth_hash
 
 from .forms import RegistrationForm, EmailAuthenticationForm, PasswordResetRequestForm,CategoryForm,SetNewPasswordForm, UserProfileEditForm, CustomPasswordChangeForm,ContactForm,CustomPasswordForm,BlogForm,BiddingForm  
+    #admin csv download
+# In your_app/views.py
+# ... (your existing imports)
+import csv
+from django.http import HttpResponse # Ensure this is imported
+
 
 User = get_user_model()
 
-# --- OTHER PAGE VIEWS (Placeholders) ---
 
 def home(request): 
     products = Product.objects.all()
@@ -46,13 +55,13 @@ def home(request):
             product.winner = product.highest_bid.user if product.highest_bid else None
             product.is_sold = product.highest_bid is not None
     
-    # Check if any live products exist (auction has started and not ended)
+
     now = timezone.now()
     has_live_products = products.filter(
         auction_start_date_time__lte=now,
         auction_end_date_time__gte=now
     ).exists()
-    # Check if any upcoming products exist (auction hasn't started yet)
+ 
     has_upcoming_products = products.filter(
         auction_start_date_time__gt=now
     ).exists()
@@ -66,7 +75,9 @@ def home(request):
     }
     return render(request, "index.html",context)
 
-def about(request): return render(request, "about.html")
+def about(request): 
+    return render(request, "about.html")
+
 def blog(request,pk):
     blog = get_object_or_404(Blog, pk=pk) 
     return render(request, "blog.html",{'blog':blog})
@@ -75,10 +86,11 @@ def category(request):
     categories = Category.objects.annotate(product_count=Count('product')).order_by('id')
     return render(request, "category.html",{'categories':categories})
 
-def contact(request): return render(request, "contact.html")
+def contact(request): 
+    return render(request, "contact.html")
 
 def seller_list(request): 
-    sellers = User.objects.filter(account_type='Seller', is_active=True)  # add is_active=True if needed
+    sellers = User.objects.filter(account_type='Seller', is_active=True) 
     context = {
         'sellers': sellers
     }
@@ -92,182 +104,37 @@ def seller_details(request, pk):
     context = {
         'seller': seller,
         's_cnt':s_cnt,
-        'products': products,  # optional
+        'products': products, 
     }
     return render(request, "seller_details.html", context)
 
-def how_to_sell(request): return render(request, "how-to-sell.html")
-def how_to_bid(request): return render(request, "how-to-buy.html")
-def faqs(request): return render(request, "faq.html")
-def error(request): return render(request, "error.html")
-def privacy_policy(request): return render(request, "privacy-policy.html")
-def support_center(request): return render(request, "support-center.html")
-def terms_condition(request): return render(request, "terms-condition.html")
+def how_to_sell(request): 
+    return render(request, "how-to-sell.html")
 
-from django.db.models import Max
+def how_to_bid(request): 
+    return render(request, "how-to-buy.html")
 
-def dash_board(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+def faqs(request): 
+    return render(request, "faq.html")
 
-    user = request.user
+def error(request): 
+    return render(request, "error.html")
 
-    seller_products = []
-    s_cnt = sold_cnt = unsold_cnt = 0
-    sold_products = []
+def privacy_policy(request): 
+    return render(request, "privacy-policy.html")
 
-    if user.account_type == 'Seller':
-        seller_products = user.seller_products.all()
-        s_cnt = seller_products.count()
+def support_center(request): 
+    return render(request, "support-center.html")
 
-        # Add highest bid info to each product
-        for product in seller_products:
-            bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
-            highest_bid = bids.first()
-            product.highest_bid = highest_bid  # attach dynamically
-            product.is_sold = bool(highest_bid)  # True if product has any bids
+def terms_condition(request): 
+    return render(request, "terms-condition.html")
 
-            if product.is_sold:
-                sold_products.append(product)
+def password_reset(request): 
+    return render(request,"dashboard-change-password.html")
 
-        sold_cnt = len(sold_products)
-        unsold_cnt = s_cnt - sold_cnt
+def help_support(request): 
+    return render(request,"dashboard-help-and-support.html")
 
-    # ------------------------------
-    # Buyer part (user’s own bids)
-    # ------------------------------
-    latest_bids = (
-        Bidding.objects.filter(user=user)
-        .select_related('product')
-        .order_by('product', '-bid_time')
-    )
-
-    unique_latest_bids = {}
-    for bid in latest_bids:
-        if bid.product_id not in unique_latest_bids:
-            unique_latest_bids[bid.product_id] = bid
-
-    latest_user_bids = list(unique_latest_bids.values())
-
-    # Mark winning bids
-    winning_bids = []
-    for bid in latest_user_bids:
-        highest_bid = Bidding.objects.filter(product=bid.product).aggregate(Max('bid_amount'))['bid_amount__max']
-        if bid.bid_amount == highest_bid:
-            winning_bids.append(bid)
-
-    # Stats
-    total_bids = Bidding.objects.filter(user=user).count()
-    attended_auctions_count = len(latest_user_bids)
-    won_auctions_count = len(winning_bids)
-    losing_auctions_count = attended_auctions_count - won_auctions_count
-
-    paginator = Paginator(latest_user_bids, 5)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'user': user,
-        'page_obj': page_obj,
-        'winning_bids': winning_bids,
-        'total_bids': total_bids,
-        'attended_auctions_count': attended_auctions_count,
-        'won_auctions_count': won_auctions_count,
-        'losing_auctions_count': losing_auctions_count,
-
-        # Seller-specific
-        'products': seller_products,
-        's_cnt': s_cnt,
-        'sold_cnt': sold_cnt,
-        'unsold_cnt': unsold_cnt,
-        'sold_products': sold_products,
-        'now': timezone.now(),
-    }
-
-    return render(request, 'dashboard.html', context)
-
-def password_reset(request): return render(request,"dashboard-change-password.html")
-def help_support(request): return render(request,"dashboard-help-and-support.html")
-#For Edit profile
-def edit_profile_view(request):
-    form = UserProfileEditForm() 
-    return render(request,"dashboard-edit-profile.html",{'form':form})
-
-def user_auction(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-
-    user = request.user
-
-    if user.account_type == 'Seller':
-        # Get seller's products
-        seller_products = Product.objects.filter(seller=user).order_by('-auction_start_date_time')
-        
-        # Add auction status and highest bid info to each product
-        now = timezone.now()
-        for product in seller_products:
-            bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
-            product.highest_bid = bids.first()
-            product.is_sold = bool(product.highest_bid)
-            # Determine auction status
-            if product.auction_start_date_time <= now <= product.auction_end_date_time:
-                product.status_display = "live"
-            elif now < product.auction_start_date_time:
-                product.status_display = "upcoming"
-            else:
-                product.status_display = "closed"
-        
-        if request.method == 'POST':
-            form = ProductForm(request.POST, request.FILES)
-            if form.is_valid():
-                product_instance = form.save(commit=False)
-                product_instance.seller = user
-
-                gallery_files = request.FILES.getlist('gallery_images')
-                gallery_paths = []
-                for file in gallery_files[:5]:
-                    saved_path = default_storage.save(f"products/gallery/{file.name}", file)
-                    gallery_paths.append(saved_path)
-
-                product_instance.gallery_images = gallery_paths
-                product_instance.save()
-                return redirect('user_auction')
-        else:
-            form = ProductForm()
-        return render(request, "dashboard-my-auction.html", {
-            'form': form,
-            'seller_products': seller_products
-        })
-
-    # For bidder users (unchanged)
-    latest_user_bids = (
-        Bidding.objects
-        .filter(user=user)
-        .values('product')
-        .annotate(max_bid=Max('bid_amount'))
-    )
-
-    winning_bids = []
-    losing_bids = []
-
-    for entry in latest_user_bids:
-        product_id = entry['product']
-        user_highest_bid = entry['max_bid']
-        user_bid = Bidding.objects.filter(user=user, product_id=product_id, bid_amount=user_highest_bid).first()
-        if not user_bid:
-            continue
-        product = user_bid.product
-        highest_bid = product.bids.order_by('-bid_amount').first()
-        if highest_bid and highest_bid.user == user:
-            winning_bids.append(user_bid)
-        else:
-            losing_bids.append(user_bid)
-
-    return render(request, "dashboard-my-auction.html", {
-        'winning_bids': winning_bids,
-        'losing_bids': losing_bids
-    })
-    #For contect Form
 def contact_view(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
@@ -281,127 +148,6 @@ def contact_view(request):
 
     return render(request, 'contact.html', {'form': form})
 
-#For Edit profile
-@login_required
-def edit_profile(request):
-    user = request.user  # current logged-in user
-
-    if request.method == 'POST':
-        form = UserProfileEditForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your profile has been updated!')
-            return redirect('edit_profile')  # redirect to same view or another page
-    else:
-        # This ensures form fields (like gender) are pre-filled with user data
-        form = UserProfileEditForm(instance=user)
-
-    return render(request, 'dashboard-edit-profile.html', {'form': form, 'user': user})
-    
-
-@login_required
-def change_password(request):
-    if request.method == 'POST':
-        form = CustomPasswordForm(user=request.user, data=request.POST)
-        
-        if form.is_valid():
-            user = form.save()
-            
-            # Important! Update the session to prevent the user from being logged out
-            update_session_auth_hash(request, user)
-            
-            messages.success(request, 'Your password has been successfully changed!')
-            return redirect('dashboard')
-        else:
-            # The form will contain error messages, e.g., "Your old password was entered incorrectly."
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        # For a GET request, create an unbound form instance
-        form = CustomPasswordForm(user=request.user)
-        
-    return render(request, 'dashboard-change-password.html', {'form': form})
-
-def admin_required(view_func):
-    def wrapper(request, *args, **kwargs):
-        if request.user.is_authenticated and request.user.email.lower() == 'sujalzadafiya330@gmail.com':
-            return view_func(request, *args, **kwargs)
-        else:
-            return redirect('login')  # or show a 403 page
-    return wrapper
-
-@admin_required
-def dashboardAdmin(request):
-    # Get statistics
-    total_bidders = User.objects.filter(account_type='Bidder').count()
-    total_sellers = User.objects.filter(account_type='Seller').count()
-    total_categories = Category.objects.count()
-    total_products = Product.objects.count()
-    
-    # Get products data for chart (last 6 months)
-    from datetime import timedelta
-    import json
-    
-    # Get all products for last 6 months
-    now = timezone.now()
-    six_months_ago = now - timedelta(days=180)
-    all_products = Product.objects.filter(
-        auction_start_date_time__gte=six_months_ago
-    )
-    
-    # Group products by month
-    products_by_month_dict = {}
-    for product in all_products:
-        month_key = product.auction_start_date_time.strftime('%Y-%m')
-        products_by_month_dict[month_key] = products_by_month_dict.get(month_key, 0) + 1
-    
-    # Generate last 6 months labels and data
-    months_list = []
-    product_counts_list = []
-    
-    # Use a more reliable month calculation
-    current_date = now.date()
-    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    
-    for i in range(5, -1, -1):  # Last 6 months: 5 months ago to current
-        # Calculate months ago
-        target_month = current_date.month - i
-        target_year = current_date.year
-        
-        # Handle year rollover
-        while target_month < 1:
-            target_month += 12
-            target_year -= 1
-        while target_month > 12:
-            target_month -= 12
-            target_year += 1
-        
-        year_month = f"{target_year}-{target_month:02d}"
-        months_list.append(month_names[target_month - 1])
-        product_counts_list.append(products_by_month_dict.get(year_month, 0))
-    
-    context = {
-        'total_bidders': total_bidders,
-        'total_sellers': total_sellers,
-        'total_categories': total_categories,
-        'total_products': total_products,
-        'months_json': json.dumps(months_list),
-        'product_counts_json': json.dumps(product_counts_list),
-    }
-    return render(request, 'Admin/dashbord_admin.html', context)
-
-def auction(request):
-    products = Product.objects.all().order_by('-auction_start_date_time')
-    for product in products:
-        bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
-        product.highest_bid = bids.first()
-        product.winner = product.highest_bid.user if product.highest_bid else None
-        product.is_sold = product.highest_bid is not None
-
-    context = {
-        'products': products,
-    }
-    return render(request, "auction.html", context)
-# This view now ONLY handles the initial page load.
 def register_view(request):
     form = RegistrationForm()
     return render(request, 'register.html', {'form': form})
@@ -613,6 +359,84 @@ def password_reset_confirm_view(request):
     return render(request, 'password_reset_confirm.html', {'form': form})
 
 
+@require_GET
+def instant_search(request):
+   
+    query = request.GET.get('q', '').strip()
+    payload = {
+        'products': [],
+        'categories': [],
+        'blogs': [],
+    }
+
+    if len(query) < 2:
+        return JsonResponse(payload)
+
+    # Limit results to keep response light
+    limit = 5
+
+    product_matches = Product.objects.filter(
+        Q(product_name__icontains=query) |
+        Q(sub_description__icontains=query) |
+        Q(product_description__icontains=query)
+    ).order_by('-auction_start_date_time')[:limit]
+
+    category_matches = Category.objects.filter(
+        Q(name__icontains=query)
+    ).order_by('name')[:limit]
+
+    blog_matches = Blog.objects.filter(
+        Q(title__icontains=query) |
+        Q(description__icontains=query)
+    ).order_by('-created_at')[:limit]
+
+    payload['products'] = [
+        {
+            'title': product.product_name,
+            'url': reverse('auction-details', args=[product.id])
+        }
+        for product in product_matches
+    ]
+
+    payload['categories'] = [
+        {
+            'title': category.name,
+            'url': reverse('category_details', args=[category.id])
+        }
+        for category in category_matches
+    ]
+
+    payload['blogs'] = [
+        {
+            'title': blog.title,
+            'url': reverse('blog', args=[blog.id])
+        }
+        for blog in blog_matches
+    ]
+
+    return JsonResponse(payload)
+
+
+def admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.email.lower() == 'sujalzadafiya330@gmail.com':
+            return view_func(request, *args, **kwargs)
+        else:
+            return redirect('login') 
+    return wrapper
+
+def auction(request):
+    products = Product.objects.all().order_by('-auction_start_date_time')
+    for product in products:
+        bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
+        product.highest_bid = bids.first()
+        product.winner = product.highest_bid.user if product.highest_bid else None
+        product.is_sold = product.highest_bid is not None
+
+    context = {
+        'products': products,
+    }
+    return render(request, "auction.html", context)
 
 @login_required
 def auc_details(request, pk):
@@ -685,7 +509,6 @@ def toggle_wishlist(request, product_id):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
 
-
 @login_required
 def user_wishlist_products(request):
     """
@@ -710,18 +533,202 @@ def user_wishlist_products(request):
     return render(request, 'wishlist.html', context)
 
 
-def add_category(request):
+# Seller and bidder profile details
+
+def dash_board(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    user = request.user
+
+    seller_products = []
+    s_cnt = sold_cnt = unsold_cnt = 0
+    sold_products = []
+
+    if user.account_type == 'Seller':
+        seller_products = user.seller_products.all()
+        s_cnt = seller_products.count()
+
+        # Add highest bid info to each product
+        for product in seller_products:
+            bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
+            highest_bid = bids.first()
+            product.highest_bid = highest_bid  # attach dynamically
+            product.is_sold = bool(highest_bid)  # True if product has any bids
+
+            if product.is_sold:
+                sold_products.append(product)
+
+        sold_cnt = len(sold_products)
+        unsold_cnt = s_cnt - sold_cnt
+
+    # ------------------------------
+    # Buyer part (user’s own bids)
+    # ------------------------------
+    latest_bids = (
+        Bidding.objects.filter(user=user)
+        .select_related('product')
+        .order_by('product', '-bid_time')
+    )
+
+    unique_latest_bids = {}
+    for bid in latest_bids:
+        if bid.product_id not in unique_latest_bids:
+            unique_latest_bids[bid.product_id] = bid
+
+    latest_user_bids = list(unique_latest_bids.values())
+
+    # Mark winning bids
+    winning_bids = []
+    for bid in latest_user_bids:
+        highest_bid = Bidding.objects.filter(product=bid.product).aggregate(Max('bid_amount'))['bid_amount__max']
+        if bid.bid_amount == highest_bid:
+            winning_bids.append(bid)
+
+    # Stats
+    total_bids = Bidding.objects.filter(user=user).count()
+    attended_auctions_count = len(latest_user_bids)
+    won_auctions_count = len(winning_bids)
+    losing_auctions_count = attended_auctions_count - won_auctions_count
+
+    paginator = Paginator(latest_user_bids, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'user': user,
+        'page_obj': page_obj,
+        'winning_bids': winning_bids,
+        'total_bids': total_bids,
+        'attended_auctions_count': attended_auctions_count,
+        'won_auctions_count': won_auctions_count,
+        'losing_auctions_count': losing_auctions_count,
+
+        # Seller-specific
+        'products': seller_products,
+        's_cnt': s_cnt,
+        'sold_cnt': sold_cnt,
+        'unsold_cnt': unsold_cnt,
+        'sold_products': sold_products,
+        'now': timezone.now(),
+    }
+
+    return render(request, 'dashboard.html', context)
+
+def user_auction(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    user = request.user
+
+    if user.account_type == 'Seller':
+        # Get seller's products
+        seller_products = Product.objects.filter(seller=user).order_by('-auction_start_date_time')
+        
+        # Add auction status and highest bid info to each product
+        now = timezone.now()
+        for product in seller_products:
+            bids = Bidding.objects.filter(product=product).order_by('-bid_amount')
+            product.highest_bid = bids.first()
+            product.is_sold = bool(product.highest_bid)
+            # Determine auction status
+            if product.auction_start_date_time <= now <= product.auction_end_date_time:
+                product.status_display = "live"
+            elif now < product.auction_start_date_time:
+                product.status_display = "upcoming"
+            else:
+                product.status_display = "closed"
+        
+        if request.method == 'POST':
+            form = ProductForm(request.POST, request.FILES)
+            if form.is_valid():
+                product_instance = form.save(commit=False)
+                product_instance.seller = user
+
+                gallery_files = request.FILES.getlist('gallery_images')
+                gallery_paths = []
+                for file in gallery_files[:5]:
+                    saved_path = default_storage.save(f"products/gallery/{file.name}", file)
+                    gallery_paths.append(saved_path)
+
+                product_instance.gallery_images = gallery_paths
+                product_instance.save()
+                return redirect('user_auction')
+        else:
+            form = ProductForm()
+        return render(request, "dashboard-my-auction.html", {
+            'form': form,
+            'seller_products': seller_products
+        })
+
+    # For bidder users (unchanged)
+    latest_user_bids = (
+        Bidding.objects
+        .filter(user=user)
+        .values('product')
+        .annotate(max_bid=Max('bid_amount'))
+    )
+
+    winning_bids = []
+    losing_bids = []
+
+    for entry in latest_user_bids:
+        product_id = entry['product']
+        user_highest_bid = entry['max_bid']
+        user_bid = Bidding.objects.filter(user=user, product_id=product_id, bid_amount=user_highest_bid).first()
+        if not user_bid:
+            continue
+        product = user_bid.product
+        highest_bid = product.bids.order_by('-bid_amount').first()
+        if highest_bid and highest_bid.user == user:
+            winning_bids.append(user_bid)
+        else:
+            losing_bids.append(user_bid)
+
+    return render(request, "dashboard-my-auction.html", {
+        'winning_bids': winning_bids,
+        'losing_bids': losing_bids
+    })
+
+def edit_profile_view(request):
+    form = UserProfileEditForm() 
+    return render(request,"dashboard-edit-profile.html",{'form':form})
+
+@login_required
+def edit_profile(request):
+    user = request.user  
+
     if request.method == 'POST':
-        form = CategoryForm(request.POST, request.FILES)
+        form = UserProfileEditForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Category added successfully!')
-            return redirect('category')  # Redirect back to the same page or to a list view
+            messages.success(request, 'Your profile has been updated!')
+            return redirect('edit_profile') 
+    else:
+        form = UserProfileEditForm(instance=user)
+
+    return render(request, 'dashboard-edit-profile.html', {'form': form, 'user': user})
+    
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordForm(user=request.user, data=request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            
+            update_session_auth_hash(request, user)
+            
+            messages.success(request, 'Your password has been successfully changed!')
+            return redirect('dashboard')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = CategoryForm()
-    return render(request, 'Admin/add_category.html', {'form': form})
+
+        form = CustomPasswordForm(user=request.user)
+        
+    return render(request, 'dashboard-change-password.html', {'form': form})
+
 
 def add_blog(request):
     if request.method == 'POST':
@@ -759,6 +766,74 @@ def place_bid(request, pk):
 
     return redirect('auction-details', pk=pk)
 
+
+
+
+
+
+
+
+@admin_required
+def dashboardAdmin(request):
+    # Get statistics
+    total_bidders = User.objects.filter(account_type='Bidder').count()
+    total_sellers = User.objects.filter(account_type='Seller').count()
+    total_categories = Category.objects.count()
+    total_products = Product.objects.count()
+    
+    # Get products data for chart (last 6 months)
+    
+    
+    # Get all products for last 6 months
+    now = timezone.now()
+    six_months_ago = now - timedelta(days=180)
+    all_products = Product.objects.filter(
+        auction_start_date_time__gte=six_months_ago
+    )
+    
+    # Group products by month
+    products_by_month_dict = {}
+    for product in all_products:
+        month_key = product.auction_start_date_time.strftime('%Y-%m')
+        products_by_month_dict[month_key] = products_by_month_dict.get(month_key, 0) + 1
+    
+    # Generate last 6 months labels and data
+    months_list = []
+    product_counts_list = []
+    
+    # Use a more reliable month calculation
+    current_date = now.date()
+    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    
+    for i in range(5, -1, -1):  # Last 6 months: 5 months ago to current
+        # Calculate months ago
+        target_month = current_date.month - i
+        target_year = current_date.year
+        
+        # Handle year rollover
+        while target_month < 1:
+            target_month += 12
+            target_year -= 1
+        while target_month > 12:
+            target_month -= 12
+            target_year += 1
+        
+        year_month = f"{target_year}-{target_month:02d}"
+        months_list.append(month_names[target_month - 1])
+        product_counts_list.append(products_by_month_dict.get(year_month, 0))
+    
+    context = {
+        'total_bidders': total_bidders,
+        'total_sellers': total_sellers,
+        'total_categories': total_categories,
+        'total_products': total_products,
+        'months_json': json.dumps(months_list),
+        'product_counts_json': json.dumps(product_counts_list),
+    }
+    return render(request, 'Admin/dashbord_admin.html', context)
+
+
+@admin_required
 def adminManageProduct(request): 
 
     products = Product.objects.all().order_by('-id')
@@ -961,4 +1036,96 @@ def deleteReview(request, review_id):
     
     # Redirect back to the review list page
     return redirect('admin-manage-review')
+
+
+
+@admin_required
+def adminManageBlog(request):
+    # Get all blogs with category information
+    blogs = Blog.objects.all().select_related('category').order_by('-created_at')
+
+    context = {
+        'blogs': blogs,
+    }
+    return render(request, 'Admin/blog/manage_blog.html', context)
+
+@admin_required
+def deleteBlog(request, blog_id):
+    # Security: Only allow POST requests for deletion
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('admin-manage-blog')
+
+    # Fetch the blog object or return a 404 error
+    blog_to_delete = get_object_or_404(Blog, id=blog_id)
+
+    title = blog_to_delete.title
+
+    # Delete the blog (and its image file via storage backend)
+    blog_to_delete.delete()
+
+    messages.success(request, f'Blog "{title}" has been deleted successfully!')
+
+    # Redirect back to the blog list page
+    return redirect('admin-manage-blog')
+
+
+# ... (your existing views)
+
+@admin_required 
+def export_products_csv_view(request):
+    """
+    Exports all products to a CSV file.
+    """
+    
+    # 1. Prepare the CSV response
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="all_auction_products.csv"'},
+    )
+    
+    # 2. Setup CSV writer
+    writer = csv.writer(response)
+    
+    # 3. Define fields and headers
+    header_labels = [
+        'ID', 
+        'Product Name', 
+        'Start Price', 
+        'Current Bid', 
+        'Auction Start Time', 
+        'Auction End Time', 
+        'Category', 
+        'Seller Email', 
+        'Status'
+    ]
+    writer.writerow(header_labels)
+    
+    # 4. Fetch data (prefetching FKs for performance)
+    products = Product.objects.all().select_related('category', 'seller')
+    
+    # 5. Write data rows
+    for product in products:
+        row = []
+        
+        # Manually assemble the row based on the desired order
+        row.append(str(product.id))
+        row.append(product.product_name)
+        row.append(str(product.start_price))
+        row.append(str(product.current_bid))
+        
+        # Format datetimes
+        row.append(product.auction_start_date_time.strftime('%Y-%m-%d %H:%M:%S') if product.auction_start_date_time else '')
+        row.append(product.auction_end_date_time.strftime('%Y-%m-%d %H:%M:%S') if product.auction_end_date_time else '')
+        
+        # Foreign Key values
+        row.append(product.category.name if product.category else 'N/A')
+        row.append(product.seller.email if product.seller else 'N/A')
+        
+        # Custom method value
+        row.append(product.auction_status())
+            
+        writer.writerow(row)
+
+    return response
 

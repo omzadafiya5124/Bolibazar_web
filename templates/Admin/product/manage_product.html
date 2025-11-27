@@ -154,6 +154,40 @@
             margin-right: 0.5rem;
         }
 
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar input {
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            width: 300px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.15);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 0.8rem;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
         .product-table-card {
             background-color: var(--white);
             border-radius: 5px;
@@ -294,6 +328,13 @@
             z-index: 1; 
         }
         .product-table-card tbody tr:nth-child(even){ background: #fbfbfd; }
+
+        /* #for active butoon */
+        .badge { display:inline-block; padding:.20rem .5rem; border-radius:999px; font-size:11px; font-weight:600; }
+        .badge-role { background:#e8f0ff; color:#2e59d9; }
+        .badge-live { background:#e6f8f1; color:#0f9d58; }
+        .badge-upcoming { background:#fdecea; color:#c0392b; }
+        .badge-close { background:#fdecea; color:#c0392b; }
     </style>
 </head>
 <body>
@@ -303,12 +344,19 @@
     <main class="main-content">
         
         <h1>Manage Products</h1>
+        <button class="edit-btn btn btn-primary" onclick="window.location.href='{% url 'export_products_csv' %}' " >Export All Products to CSV</button>
         <!-- Product Table Card -->
         <div class="product-table-card">
             <div class="product-table-header" style="display:flex; align-items:center; justify-content: space-between;">
                 <h2>Product List</h2>
-                <!-- <button id="addProductBtn" class="edit-btn" style="background:#1cc88a;">+ Add Product</button> -->
-                <button id="addProductBtn" class="edit-btn btn btn-primary">Add Product</button>
+                <div class="search-container">  
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="productSearch" placeholder="Search products...">
+                    </div>
+                    
+                    <button id="addProductBtn" class="edit-btn btn btn-primary">Add Product</button>
+                </div>
             </div>
             <div class="table-responsive">
                 <table>
@@ -364,14 +412,19 @@
 
                             <!-- 5. Status (with conditional coloring) -->
                             <td>
-                                {% if product.status == 'Active' %}
-                                    <span style="color: var(--success-color);">Active</span>
-                                {% elif product.status == 'Pending' %}
-                                    <span style="color: var(--warning-color);">Pending</span>
-                                {% elif product.status == 'Expired' %}
-                                    <span style="color: var(--danger-color);">Expired</span>
+                                {# This uses the auction_status() method defined in your Product model #}
+                                {% if product.auction_status == 'live' %}
+                                    <!-- <span style="color: var(--success-color); font-weight: bold;">LIVE</span> -->
+                                    <span class="badge badge-live">LIVE</span>
+                                
+                                {% elif product.auction_status == 'upcoming' %}
+                                    <span class="badge badge-upcoming">UPCOMING</span>
+                                
+                                {% elif product.auction_status == 'closed' %}
+                                    <span class="badge badge-closed">ENDED</span>
+                                
                                 {% else %}
-                                    <span>{{ product.status }}</span>
+                                    <span>{{ product.auction_status }}</span>
                                 {% endif %}
                             </td>
 
@@ -451,27 +504,94 @@
         overlay.addEventListener('click', function(e){ if(e.target === overlay){ closeModal(); }});
 
         function bindFormSubmit(formEl, submitUrl){
+            if(!formEl) {
+                console.error('Form element not found');
+                return;
+            }
             formEl.addEventListener('submit', function(e){
                 e.preventDefault();
+                const submitBtn = formEl.querySelector('button[type="submit"]');
+                if(submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Saving...';
+                }
+                
                 const fd = new FormData(formEl);
+                
+                // Debug: Log form data being sent
+                console.log('Form submission URL:', submitUrl);
+                console.log('CSRF Token:', getCookie('csrftoken'));
+                console.log('Form data entries:');
+                for (let pair of fd.entries()) {
+                    console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+                }
+                
                 fetch(submitUrl, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
                 }).then(async (res)=>{
                     const contentType = res.headers.get('content-type') || '';
+                    console.log('Response status:', res.status, 'Content-Type:', contentType);
+                    
                     if(res.ok){
                         // JSON success -> reload list
-                        try { const data = await res.json(); if(data.ok){ window.location.reload(); return; } } catch(_){}
+                        try { 
+                            const data = await res.json(); 
+                            console.log('Success response:', data);
+                            if(data.ok){ 
+                                window.location.reload(); 
+                                return; 
+                            } else if(data.error) {
+                                alert('Error: ' + data.error);
+                                if(submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = 'Save';
+                                }
+                                return;
+                            }
+                        } catch(e){
+                            console.log('Not JSON response, reloading...');
+                        }
                         window.location.reload();
                         return;
                     }
                     if(contentType.includes('text/html')){
                         const html = await res.text();
+                        console.log('Received HTML response (likely validation errors)');
                         body.innerHTML = html;
                         const newForm = body.querySelector('form');
-                        bindFormSubmit(newForm, submitUrl);
-                        initSellerFilter();
+                        if(newForm){
+                            bindFormSubmit(newForm, submitUrl);
+                            initSellerFilter();
+                            // Scroll to top to show errors
+                            body.scrollTop = 0;
+                        } else {
+                            console.error('Form not found in HTML response');
+                        }
+                        if(submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Save';
+                        }
+                    } else {
+                        // Handle JSON error responses
+                        try {
+                            const errorData = await res.json();
+                            alert('Error: ' + (errorData.error || errorData.message || 'Failed to save product'));
+                        } catch(_) {
+                            alert('Error: Failed to save product. Please check the form for errors.');
+                        }
+                        if(submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Save';
+                        }
+                    }
+                }).catch(function(error){
+                    console.error('Form submission error:', error);
+                    alert('Network error: Could not submit form. Please check your connection and try again.');
+                    if(submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Save';
                     }
                 });
             });
@@ -481,14 +601,28 @@
 
         function loadForm(url, modalHeader){
             openModal(modalHeader);
-            body.innerHTML = '<div>Loading...</div>';
+            body.innerHTML = '<div style="padding:20px; text-align:center;">Loading...</div>';
             fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' }})
-                .then(r=>r.text())
+                .then(r=>{
+                    if(!r.ok) {
+                        throw new Error('Failed to load form: ' + r.status + ' ' + r.statusText);
+                    }
+                    return r.text();
+                })
                 .then(html=>{
                     body.innerHTML = html;
                     const form = body.querySelector('form');
-                    bindFormSubmit(form, url);
-                    initSellerFilter();
+                    if(form){
+                        bindFormSubmit(form, url);
+                        initSellerFilter();
+                    } else {
+                        console.error('Form not found in response');
+                        body.innerHTML = '<div style="padding:20px; color:red;">Error: Form not found in response. Please refresh the page and try again.</div>';
+                    }
+                })
+                .catch(function(error){
+                    console.error('Error loading form:', error);
+                    body.innerHTML = '<div style="padding:20px; color:red;">Error loading form: ' + error.message + '<br>Please refresh the page and try again.</div>';
                 });
         }
 
@@ -530,6 +664,32 @@
                 loadForm(url, 'Edit Product');
             });
         });
+
+        // Product search functionality
+        const searchInput = document.getElementById('productSearch');
+        if(searchInput){
+            searchInput.addEventListener('input', function(e){
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const tableRows = document.querySelectorAll('tbody tr');
+                
+                tableRows.forEach(function(row){
+                    // Skip the empty row if it exists
+                    if(row.querySelector('td[colspan]')){
+                        return;
+                    }
+                    
+                    // Get all text content from the row
+                    const rowText = row.textContent.toLowerCase();
+                    
+                    // Show/hide row based on search match
+                    if(rowText.includes(searchTerm)){
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
     })();
     </script>
 </body>
