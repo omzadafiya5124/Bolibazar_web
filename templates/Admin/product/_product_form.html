@@ -1,23 +1,29 @@
 {% load static %}
-<form id="modalProductForm" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
 
-    <div class="form-grid">
-        <div class="form-group full">
-            <label>{{ form.product_name.label }}</label>
+  <form id="modalProductForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div class="form-group">
+            <label>{{ form.product_name.label_tag }}</label>
             {{ form.product_name }}
             {{ form.product_name.errors }}
         </div>
         <div class="form-group">
-            <label>{{ form.start_price.label }}</label>
-            {{ form.start_price }}
-            {{ form.start_price.errors }}
+            <label>{{ form.sub_description.label_tag }}</label>
+            {{ form.sub_description }}
+            {{ form.sub_description.errors }}
         </div>
         <div class="form-group">
-            <label>{{ form.category.label }}</label>
-            {{ form.category }}
-            {{ form.category.errors }}
+            <label>{{ form.product_description.label_tag }}</label>
+            {{ form.product_description }}
+            {{ form.product_description.errors }}
+        </div>
+        <div class="form-group">
+            <label>{{ form.start_price.label_tag }}</label>
+            {{ form.start_price }}
+            {{ form.start_price.errors }}
         </div>
         <div class="form-group">
             <label>{{ form.seller.label }}</label>
@@ -25,27 +31,22 @@
             {{ form.seller }}
             {{ form.seller.errors }}
         </div>
-        <div class="form-group full">
-            <label>{{ form.sub_description.label }}</label>
-            {{ form.sub_description }}
-            {{ form.sub_description.errors }}
-        </div>
-        <div class="form-group full">
-            <label>{{ form.product_description.label }}</label>
-            {{ form.product_description }}
-            {{ form.product_description.errors }}
-        </div>
         <div class="form-group">
-            <label>{{ form.auction_start_date_time.label }}</label>
+            <label>{{ form.auction_start_date_time.label_tag }}</label>
             {{ form.auction_start_date_time }}
             {{ form.auction_start_date_time.errors }}
         </div>
         <div class="form-group">
-            <label>{{ form.auction_end_date_time.label }}</label>
+            <label>{{ form.auction_end_date_time.label_tag }}</label>
             {{ form.auction_end_date_time }}
             {{ form.auction_end_date_time.errors }}
         </div>
-        <div class="form-group full">
+        <div class="form-group">
+            <label>{{ form.category.label_tag }}</label>
+            {{ form.category }}
+            {{ form.category.errors }}
+        </div>
+            <div class="form-group full">
             <label>{{ form.main_image.label }}</label>
             <div class="image-preview">
                 {{ form.main_image }}
@@ -55,20 +56,11 @@
             </div>
             {{ form.main_image.errors }}
         </div>
-
-        <div class="form-group full">
-            <label for="id_gallery_images_upload">Gallery Images</label>
-            <div class="image-preview" style="flex-wrap: wrap; gap:10px;">
-                {{ form.gallery_images_upload }}
-                {% if form.instance and form.instance.pk and form.instance.gallery_images %}
-                    {% for path in form.instance.gallery_images %}
-                        <img src="/{{ path }}" alt="Gallery image">
-                    {% endfor %}
-                {% endif %}
-            </div>
+        <div class="form-group">
+            <label for="gallery_images">Gallery Images (Optional, up to 5):</label>
+            <input type="file" name="gallery_images" id="gallery_images" multiple>
+            {{ form.gallery_images_upload.errors }}
         </div>
-    </div>
-
     <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
         <button type="button" class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
         <button type="submit" class="btn btn-primary">Save</button>

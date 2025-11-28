@@ -1015,22 +1015,19 @@ from django.shortcuts import render
 from django.core.files.storage import default_storage
 # from .forms import ProductForm # Ensure this is imported
 
-def admin_product_form(request, pk=None): # Use pk=None for new/edit in one view (optional)
-    # ... (If using combined new/edit view, handle pk logic here) ...
-
+def admin_product_form(request):
     if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=None) # instance=None for new
+        form = ProductForm(request.POST, request.FILES) # instance=None for new
         if form.is_valid():
-            product = form.save() 
-            gallery_files = request.FILES.getlist('gallery_images_upload')
-            if gallery_files:
-                saved_paths = [] 
-                for f in gallery_files:
-                    path = default_storage.save(f"products/gallery/{f.name}", f)
-                    saved_paths.append(path)
-                product.gallery_images = saved_paths
-                
-                product.save(update_fields=['gallery_images'])
+            product = form.save(commit=False) 
+            gallery_files = request.FILES.getlist('gallery_images')
+            gallery_paths = []
+            for file in gallery_files[:5]:
+                saved_path = default_storage.save(f"products/gallery/{file.name}", file)
+                gallery_paths.append(saved_path)
+
+            product.gallery_images = gallery_paths
+            product.save()
             return JsonResponse({'ok': True})
         
         return render(request, 'Admin/product/_product_form.html', {'form': form})
