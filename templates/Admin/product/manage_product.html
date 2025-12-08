@@ -438,6 +438,8 @@
                                 {%if product.is_paid %}
                                     <span class="badge badge-live">Success</span>
                                 {% elif product.auction_status == 'live' %}
+                                    <span class="badge badge-upcoming">Pending</span> 
+                                {% elif product.auction_status == 'upcoming' %}
                                     <span class="badge badge-upcoming">Pending</span>
                                 {%else%}    
                                     <span class="badge badge-closed">Failed</span>
