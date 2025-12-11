@@ -65,6 +65,10 @@ def home(request):
     has_upcoming_products = products.filter(
         auction_start_date_time__gt=now
     ).exists()
+
+    has_closed_products = products.filter(
+    auction_end_date_time__lt=now
+    ).exists()
             
     context ={
         'products':products,
@@ -72,6 +76,7 @@ def home(request):
         'blogs':blogs,
         'has_live_products': has_live_products,
         'has_upcoming_products': has_upcoming_products,
+        'has_closed_products':has_closed_products,
     }
     return render(request, "index.html",context)
 

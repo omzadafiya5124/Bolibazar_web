@@ -1,4 +1,6 @@
-{% include "Admin/admin_header.html" %}
+{% extends "Admin/admin_header.html" %}
+{% block title %}Manage Product{% endblock %}
+{% block content %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -708,5 +710,6 @@
         }
     })();
     </script>
+    {%endblock%}
 </body>
 </html>

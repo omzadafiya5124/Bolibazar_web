@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bolibazar Admin Dashboard</title>
+    <title>{% block title %}{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="{% static "assets/img/fav-icon.svg" %}" type="image/gif" sizes="20x20">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -356,7 +357,7 @@
             <p>Administrator</p>
         </div>
         <ul class="nav-menu">
-            <li><a href="{% url 'dashboard-admin' %}" class="nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard </a></li>
+            <li><a href="{% url 'dashboard-admin' %}" class="nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard </a></li>
             <li><a href="{% url 'admin-manage-product' %}" class="nav-item"><i class="fa-brands fa-product-hunt"></i> Manage Product </a></li>
             <li><a href="{% url 'admin-manage-category' %}" class="nav-item"><i class="fa-solid fa-layer-group"></i> Manage Category </a></li>
             <li><a href="{% url 'admin-manage-users' %}" class="nav-item notifications"><i class="fa-solid fa-users"></i> Manage Users </a></li>
@@ -386,3 +387,5 @@
                 <img src="{{ user.image.url }}" alt="User Avatar" style="width: 40px; height: 40px; border-radius: 50%; margin-left: 1.5rem;">
             </div>
         </header>
+
+{%block content%}{%endblock%}

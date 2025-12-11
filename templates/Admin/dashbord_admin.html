@@ -1,102 +1,86 @@
-{% include "Admin/admin_header.html" %}
+{% extends "Admin/admin_header.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
 
-        <h1>Dashboard</h1>
-        
-        <div class="cards">
-            <div class="card visitors">
-                <div class="card-content">
-                    <h3>Total Bidders</h3>
-                    <p>{{ total_bidders }}</p>
-                </div>
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="card sales">
-                <div class="card-content">
-                    <h3>Total Products</h3>
-                    <p>{{ total_products }}</p>
-                </div>
-                <i class="fas fa-chart-bar"></i>
-            </div>
-            <div class="card subscribers">
-                <div class="card-content">
-                    <h3>Total Categories</h3>
-                    <p>{{ total_categories }}</p>
-                </div>
-                <i class="fas fa-newspaper"></i>
-            </div>
-            <div class="card order">
-                <div class="card-content">
-                    <h3>Total Sellers</h3>
-                    <p>{{ total_sellers }}</p>
-                </div>
-                <i class="fas fa-check-circle"></i>
-            </div>
+<main style="padding-bottom: 80px;">  <!-- FIX: remove bottom extra space -->
+
+<h1>Dashboard</h1>
+
+<div class="cards">
+    <div class="card visitors">
+        <div class="card-content">
+            <h3>Total Bidders</h3>
+            <p>{{ total_bidders }}</p>
         </div>
-
-        <div class="main-container">
-            <div class="task-card">
-                <h2>Task</h2>
-                <p>Complete</p>
-                <div class="progress-circle">
-                    <span>80%</span>
-                </div>
-                <p class="completed-task">Completed</p>
-            </div>
-            <!-- START: New Chart Card -->
-            <div class="chart-card">
-                <h2>Products Overview</h2>
-                <p>Last 6 Months</p>
-                <canvas id="mySalesChart"></canvas>
-            </div>
-            <!-- END: New Chart Card -->
+        <i class="fas fa-users"></i>
+    </div>
+    <div class="card sales">
+        <div class="card-content">
+            <h3>Total Products</h3>
+            <p>{{ total_products }}</p>
         </div>
-    </main>
+        <i class="fas fa-chart-bar"></i>
+    </div>
+    <div class="card subscribers">
+        <div class="card-content">
+            <h3>Total Categories</h3>
+            <p>{{ total_categories }}</p>
+        </div>
+        <i class="fas fa-newspaper"></i>
+    </div>
+    <div class="card order">
+        <div class="card-content">
+            <h3>Total Sellers</h3>
+            <p>{{ total_sellers }}</p>
+        </div>
+        <i class="fas fa-check-circle"></i>
+    </div>
+</div>
 
-    <script>
-        const ctx = document.getElementById('mySalesChart').getContext('2d');
-        
-        const mySalesChart = new Chart(ctx, {
-            type: 'bar', // Type of chart
-            data: {
-                labels: {{ months_json|safe }}, // Labels for the X-axis
-                datasets: [{
-                    label: 'Products Added',
-                    data: {{ product_counts_json|safe }}, // Your data points
-                    backgroundColor: 'rgba(78, 115, 223, 0.8)', // Bar color
-                    borderColor: 'rgba(78, 115, 223, 1)',
-                    borderWidth: 1,
-                    borderRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#e3e6f0'
-                        },
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false // Hide the legend label
-                    }
+<div class="main-container mb-3"> <!-- Reduced mb spacing -->
+    <div class="task-card">
+        <h2>Task</h2>
+        <p>Complete</p>
+        <div class="progress-circle"><span>80%</span></div>
+        <p class="completed-task">Completed</p>
+    </div>
+
+    <div class="chart-card">
+        <h2>Products Overview</h2>
+        <p>Last 6 Months</p>
+        <canvas id="mySalesChart"></canvas>
+    </div>
+</div>
+
+</main>
+
+<script>
+    const ctx = document.getElementById('mySalesChart').getContext('2d');
+    const mySalesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ months_json|safe }},
+            datasets: [{
+                label: 'Products Added',
+                data: {{ product_counts_json|safe }},
+                backgroundColor: 'rgba(78,115,223,0.8)',
+                borderColor: 'rgba(78,115,223,1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
                 }
-            }
-        });
-        
-        
-    </script>
-    
-</body>
-</html>
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+</script>
+
+{% endblock %}

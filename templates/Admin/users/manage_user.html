@@ -1,5 +1,7 @@
-{% include "Admin/admin_header.html" %}
+{% extends "Admin/admin_header.html" %}
+{% block title %}Manage User{% endblock %}
 {% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -280,6 +282,7 @@
     })();
 
     </script>
+    {%endblock%}
 </body>
 </html>
 

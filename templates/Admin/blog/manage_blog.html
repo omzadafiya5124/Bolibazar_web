@@ -1,4 +1,6 @@
-{% include "Admin/admin_header.html" %}
+{% extends "Admin/admin_header.html" %}
+{% block title %}Manage Blog{% endblock %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -195,15 +197,6 @@
 <body>
     <main class="main-content">
         <h1>Manage Blogs</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
         <div class="table-card">
             <div class="card-header">
                 <h2>All Blogs</h2>
@@ -273,6 +266,7 @@
             </div>
         </div>
     </main>
+    {%endblock%}
 </body>
 </html>
 
