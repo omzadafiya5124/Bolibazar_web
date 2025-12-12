@@ -86,11 +86,15 @@
                                 <td data-label="Product Name">{{ bid.product.product_name }}</td>
                                 <td data-label="Amount">₹{{ bid.bid_amount }}</td>
                                 <td data-label="Status">
-                                {% if bid in winning_bids %}
-                                        <span>Winning</span>
-                                    {% else %}
-                                        <span class="cancel">Losing</span>
-                                    {% endif %}
+                                    {% if bid.product.auction_status == "live" %}
+                                            <span class="cancel">Live</span>
+                                    {%else%}
+                                        {% if bid in winning_bids %}
+                                            <span>Winning</span>
+                                        {% else %}
+                                            <span class="cancel">Losing</span>
+                                        {% endif %}
+                                    {%endif%}
                                 </td>
                                 <td data-label="Auction Date">{{ bid.bid_time|date:"F d, Y" }}</td>
                             </tr>
@@ -171,10 +175,16 @@
                                             ₹{{ product.highest_bid.bid_amount|default:"0" }}
                                         </td>
                                         <td data-label="Status">
-                                            {% if product.is_sold %}
-                                                <span>Sold</span>
-                                            {% else %}
-                                                <span class="cancel">Unsold</span>
+                                            {% if product.auction_status == "live" %}
+                                                <span class="cancel">Live</span>
+                                            {% elif product.auction_status == "upcoming" %}
+                                                <span style="color:#ffffff;background-color:#00b4d8;">upcoming</span>
+                                            {%else%}
+                                                {% if product.is_sold %}
+                                                    <span>Sold</span> 
+                                                {%else%}
+                                                    <span class="cancel">Unsold</span>
+                                                {%endif%}
                                             {% endif %}
                                         </td>
                                         <td data-label="Auction Start">{{ product.auction_start_date_time|date:"F d, Y, h:i A" }}</td>
