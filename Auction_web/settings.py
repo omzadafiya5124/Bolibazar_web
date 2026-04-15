@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'accounts',
-
+    'cloudinary', 
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
@@ -196,6 +197,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # At the bottom of settings.py
 AUTH_USER_MODEL = 'accounts.User'
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
