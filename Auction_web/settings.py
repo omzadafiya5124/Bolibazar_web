@@ -95,11 +95,10 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
+        "default": dj_database_url.parse(
+            DATABASE_URL,
             conn_max_age=600,
-            ssl_require=os.getenv("DB_SSL_REQUIRE", "True").lower()
-            in {"1", "true", "yes", "on"},
+            ssl_require=True 
         )
     }
 else:
@@ -109,6 +108,7 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 
 
 # Password validation
