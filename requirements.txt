@@ -10,3 +10,14 @@ razorpay==2.0.0
 requests==2.32.5
 PyJWT==2.10.1
 cryptography==45.0.6
+asgiref==3.9.1
+sqlparse==0.5.3
+tzdata==2025.2
+certifi==2025.8.3
+cffi==1.17.1
+charset-normalizer==3.4.3
+idna==3.10
+packaging==25.0
+pycparser==2.22
+typing_extensions==4.15.0
+urllib3==2.5.0
