@@ -21,3 +21,5 @@ packaging==25.0
 pycparser==2.22
 typing_extensions==4.15.0
 urllib3==2.5.0
+cloudinary==1.44.1
+django-cloudinary-storage==0.3.0
