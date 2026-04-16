@@ -90,6 +90,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Auction_web.wsgi.application'
 
+import cloudinary
+
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+)
+
 import dj_database_url
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -146,7 +154,7 @@ CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "CSRF_TRUSTED_ORIGINS",
-        "https://*.vercel.app,https://bolibazar.up.railway.app,https://*.up.railway.app",
+        "https://*.vercel.app"
     ).split(",")
     if origin.strip()
 ]
@@ -184,7 +192,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
@@ -196,8 +204,6 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # At the bottom of settings.py
 AUTH_USER_MODEL = 'accounts.User'
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'
@@ -211,11 +217,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 
-# --- MEDIA FILE CONFIGURATION ---
-# The absolute path to the directory where user-uploaded files will be stored.
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# The URL that will serve the media files.
-MEDIA_URL = '/media/'
+# # --- MEDIA FILE CONFIGURATION ---
+# # The absolute path to the directory where user-uploaded files will be stored.
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# # The URL that will serve the media files.
+# MEDIA_URL = '/media/'
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
